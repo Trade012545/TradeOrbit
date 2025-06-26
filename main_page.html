@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Main Page - Crypto Axis</title>
+  <title>Main Page - TradeOrbit</title>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
   <style>
     :root {
       --bg-color: #0f111d;
@@ -220,11 +220,11 @@
     <button class="menu-icon" onclick="toggleSidebar()">☰</button>
     <div class="top-right">
       <span class="toggle-mode" onclick="toggleMode()">🌓</span>
-      <div class="profile" onclick="toggleProfileMenu()">AC</div>
+      <div class="profile" onclick="toggleProfileMenu()" id="profileInitials">--</div>
     </div>
     <div class="profile-menu" id="profileMenu">
-      <p>Ab Cd</p>
-      <small>abcdwxyz@gmail.com</small>
+      <p id="profileName">Loading...</p>
+      <small id="profileEmail">Loading...</small>
       <button onclick="location.href='profile_page.html'">👤 View Profile</button>
       <button onclick="location.href='funds_page.html'">➕ Add Funds</button>
       <button onclick="location.href='funds_page.html'">➖ Withdraw Funds</button>
@@ -235,23 +235,22 @@
   <div class="sidebar" id="sidebar">
     <h2>StockOrient</h2>
     <a href="home_page.html">🏠 Home</a>
-    <a href="dashboard_page.html">📊 Dashboard</a>
+    <a href="dashboard_page.html">👤 Dashboard</a>
+    <a href="funds_page.html">🏛️ Mange Funds</a>
     <a href="trade_page.html">🔁 Trade</a>
-    <a href="marketoverview_page.html">📈 Market Overview</a>
-    <a href="indianmarket_page.html">🇮🇳 Indian Market</a>
-    <a href="forexcrypto_page.html">🔗 Forex & Crypto</a>
+    <a href="overview_page.html">📈 Market Overview</a>
+    <a href="indian_page.html">🇮🇳 Indian Stocks & Indices</a>
+    <a href="global_page.html">🔗 Global Stocks & Indices</a>
+    <a href="forex_crypto_page.html">📊 Forex & Crypto</a>
     <a href="economiccalendar_page.html">📅 Economic Calendar</a>
-    <a href="myaccount_page.html">👤 My Account</a>
-    <a href="funds_page.html">🏛️ Funds</a>
     <h4>Information</h4>
-    <a href="margintrading_page.html">📈 Margin Trading</a>
     <a href="aboutus_page.html">ℹ️ About Us</a>
     <a href="contactus_page.html">✉️ Contact Us</a>
   </div>
 
   <div class="container">
     <div class="card">
-      <h2>Welcome to StockOrient!</h2>
+      <h2>Welcome to TradeOrbit!</h2>
       <p>Let's get your account ready for trading.</p>
     </div>
 
@@ -287,6 +286,12 @@
   </div>
 
   <script>
+    const client = new Appwrite.Client()
+      .setEndpoint("https://nyc.cloud.appwrite.io/v1")
+      .setProject("685cb0a90017cc71f99e");
+
+    const account = new Appwrite.Account(client);
+
     function toggleSidebar() {
       document.getElementById("sidebar").classList.toggle("show");
     }
@@ -306,19 +311,11 @@
       }
     }
 
-    window.onload = function() {
-      if (localStorage.getItem('theme') === 'light') {
-        document.body.setAttribute('data-theme', 'light');
-      }
-    };
-
-    function showKYCModal() {
-      document.getElementById("kycModal").style.display = "flex";
-    }
-
     function logoutUser() {
-      document.getElementById("profileMenu").classList.remove("show");
-      document.getElementById("logoutModal").style.display = "flex";
+      account.deleteSession("current").then(() => {
+        document.getElementById("profileMenu").classList.remove("show");
+        document.getElementById("logoutModal").style.display = "flex";
+      });
     }
 
     window.onclick = function(e) {
@@ -328,6 +325,22 @@
         if (e.target === modal) modal.style.display = "none";
       });
     }
+
+    window.onload = async function () {
+      if (localStorage.getItem('theme') === 'light') {
+        document.body.setAttribute('data-theme', 'light');
+      }
+      try {
+        const user = await account.get();
+        const initials = user.name.split(" ").map(n => n[0]).join("").toUpperCase();
+        document.getElementById("profileInitials").textContent = initials;
+        document.getElementById("profileName").textContent = user.name;
+        document.getElementById("profileEmail").textContent = user.email;
+      } catch (err) {
+        alert("Not logged in. Redirecting to login page.");
+        window.location.href = "login_page.html";
+      }
+    };
   </script>
 </body>
 </html>
