@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login - TradeOrbit</title>
   <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
   <style>
@@ -16,6 +16,7 @@
       align-items: center;
       height: 100vh;
     }
+
     .container {
       background-color: #1c1c2c;
       padding: 2rem;
@@ -25,24 +26,38 @@
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
       position: relative;
     }
+
     .back-btn {
       position: absolute;
-      top: 10px;
-      left: 10px;
+      top: 20px;
+      left: 20px;
       color: #3b82f6;
       text-decoration: none;
       font-size: 1rem;
     }
+
     h2 {
       text-align: center;
+      margin-bottom: 0.5rem;
     }
+
+    p {
+      text-align: center;
+      color: gray;
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+    }
+
     .input-group {
-      margin-bottom: 1.25rem;
+      margin-bottom: 1rem;
+      position: relative;
     }
+
     label {
       display: block;
       margin-bottom: 0.25rem;
     }
+
     input[type="text"],
     input[type="password"] {
       width: 100%;
@@ -51,27 +66,28 @@
       border-radius: 6px;
       background-color: #0f0f1a;
       color: white;
+      font-size: 1rem;
     }
-    .password-wrapper {
-      position: relative;
-    }
+
     .toggle-password {
       position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
+      right: 15px;
+      top: 34px;
       cursor: pointer;
     }
+
     .forgot-password {
       text-align: right;
-      margin-top: -10px;
-      margin-bottom: 10px;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
     }
+
     .forgot-password a {
       color: #3b82f6;
-      text-decoration: none;
       font-size: 0.9rem;
+      text-decoration: none;
     }
+
     button {
       width: 100%;
       padding: 0.75rem;
@@ -80,11 +96,15 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
+      font-size: 1rem;
     }
+
     .footer-text {
       text-align: center;
       margin-top: 1rem;
+      font-size: 0.95rem;
     }
+
     .footer-text a {
       color: #3b82f6;
       text-decoration: none;
@@ -95,19 +115,19 @@
   <a href="index.html" class="back-btn">&larr; Back</a>
   <div class="container">
     <h2>Welcome Back!</h2>
-    <p style="text-align:center; color: gray;">Sign in to continue to your TradeOrbit account.</p>
+    <p>Sign in to continue to your TradeOrbit account.</p>
     <form id="login-form">
       <div class="input-group">
-        <label for="loginID">Email or Mobile</label>
-        <input type="text" id="loginID" required placeholder="Enter your email or mobile number">
+        <label for="login">Email or Mobile</label>
+        <input type="text" id="login" required placeholder="Enter your email or mobile number">
       </div>
-      <div class="input-group password-wrapper">
-        <label for="loginPassword">Password</label>
-        <input type="password" id="loginPassword" required>
-        <span class="toggle-password" onclick="togglePassword('loginPassword')">👁️</span>
+      <div class="input-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" required placeholder="Enter your password">
+        <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
       </div>
       <div class="forgot-password">
-        <a href="#" onclick="showSupportDialog()">Forgot password?</a>
+        <a href="#" onclick="forgotPassword()">Forgot password?</a>
       </div>
       <button type="submit">Sign In</button>
     </form>
@@ -116,13 +136,6 @@
     </div>
   </div>
 
-  <!-- Support Dialog -->
-  <dialog id="supportDialog">
-    <p>Users can request reset password by contacting customer support.</p>
-    <p><a href="contact_page.html">Contact Customer Support</a></p>
-    <button onclick="document.getElementById('supportDialog').close()">Close</button>
-  </dialog>
-
   <script>
     const client = new Appwrite.Client()
       .setEndpoint("https://nyc.cloud.appwrite.io/v1")
@@ -130,26 +143,47 @@
 
     const account = new Appwrite.Account(client);
 
+    // Clear any existing session before login
+    (async () => {
+      try {
+        await account.getSession("current");
+        await account.deleteSession("current");
+        console.log("Previous session cleared.");
+      } catch (err) {
+        console.log("No existing session found.");
+      }
+    })();
+
     function togglePassword(id) {
       const field = document.getElementById(id);
       field.type = field.type === "password" ? "text" : "password";
     }
 
-    function showSupportDialog() {
-      document.getElementById("supportDialog").showModal();
+    function forgotPassword() {
+      alert("Users can request reset password by contacting customer support.");
+      if (confirm("Do you want to contact customer support now?")) {
+        window.location.href = "contact_page.html";
+      }
     }
 
     document.getElementById("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const loginID = document.getElementById("loginID").value.trim();
-      const password = document.getElementById("loginPassword").value;
+
+      const login = document.getElementById("login").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (!login || !password) {
+        alert("Please enter both email/mobile and password.");
+        return;
+      }
 
       try {
-        await account.createEmailSession(loginID, password);
+        await account.createEmailSession(login, password);
+        alert("Login successful!");
         window.location.href = "main_page.html";
-      } catch (err) {
-        alert("Login failed: " + (err.message || "Invalid credentials."));
-        console.error(err);
+      } catch (error) {
+        console.error(error);
+        alert("Login failed: " + (error.message || "Invalid credentials"));
       }
     });
   </script>
