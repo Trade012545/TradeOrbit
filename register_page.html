@@ -23,6 +23,7 @@
       width: 90%;
       max-width: 400px;
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      position: relative;
     }
     .back-btn {
       position: absolute;
@@ -123,7 +124,6 @@
             <option value="+1">+1 (US)</option>
             <option value="+44">+44 (UK)</option>
             <option value="+61">+61 (AU)</option>
-            <!-- Add more as needed -->
           </select>
           <input type="text" id="mobile" required maxlength="10">
         </div>
@@ -160,6 +160,10 @@
       .setProject("685cb0a90017cc71f99e");
 
     const account = new Appwrite.Account(client);
+    const databases = new Appwrite.Databases(client);
+
+    const databaseID = "685d0c85000aa071581a";
+    const collectionID = "685d0ca4003e789c372d";
 
     document.getElementById("register-form").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -178,8 +182,8 @@
         return;
       }
 
-      if (!/^[0-9]{7,15}$/.test(mobile)) {
-        alert("Mobile number must be between 7 and 15 digits.");
+      if (!/^[0-9]{10}$/.test(mobile)) {
+        alert("Mobile number must be exactly 10 digits.");
         return;
       }
 
@@ -193,17 +197,21 @@
         return;
       }
 
-      const fullName = `${firstName} ${lastName}`;
-      const fullPhone = `${countryCode}${mobile}`;
-
       try {
-        await account.create("unique()", email, password, fullName);
-        await account.createEmailSession(email, password); // Required before update
-        await account.updatePhone(fullPhone, password);
+        const fullName = `${firstName} ${lastName}`;
+        const fullPhone = `${countryCode}${mobile}`;
 
-        if (confirm("Registration successful! Proceed to login?")) {
-          window.location.href = "login_page.html";
-        }
+        await account.create("unique()", email, password, fullName);
+
+        await databases.createDocument(databaseID, collectionID, "unique()", {
+          email,
+          mobile: fullPhone,
+          firstName,
+          lastName
+        });
+
+        alert("Registration successful!");
+        window.location.href = "login_page.html";
       } catch (error) {
         console.error(error);
         alert("Error: " + (error.message || "Registration failed."));
