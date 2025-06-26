@@ -1,39 +1,333 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Main Page - TradeOrbit</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Main Page - Crypto Axis</title>
   <style>
+    :root {
+      --bg-color: #0f111d;
+      --text-color: white;
+      --card-bg: #161925;
+      --border-color: rgba(255,255,255,0.05);
+      --link-color: #60a5fa;
+      --btn-bg: #3b82f6;
+      --btn-hover: #2563eb;
+    }
+
+    [data-theme="light"] {
+      --bg-color: white;
+      --text-color: #111827;
+      --card-bg: #f3f4f6;
+      --border-color: #e5e7eb;
+      --link-color: #2563eb;
+      --btn-bg: #3b82f6;
+      --btn-hover: #2563eb;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: #0f0f1a;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background-color: #161925;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      position: relative;
+    }
+    .menu-icon {
+      font-size: 1.5rem;
+      background: none;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 4px 8px;
       color: white;
+      cursor: pointer;
+    }
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .toggle-mode {
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+    .profile {
+      width: 32px;
+      height: 32px;
+      background-color: #374151;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .profile-menu {
+      display: none;
+      position: absolute;
+      top: 60px;
+      right: 1rem;
+      background-color: #1f2937;
+      border-radius: 10px;
+      padding: 1rem;
+      width: 220px;
+      z-index: 999;
+    }
+    .profile-menu.show {
+      display: block;
+    }
+    .profile-menu p {
+      margin: 0 0 0.25rem 0;
+      font-weight: bold;
+    }
+    .profile-menu small {
+      color: #9ca3af;
+      display: block;
+      margin-bottom: 0.75rem;
+    }
+    .profile-menu button {
+      display: block;
+      width: 100%;
+      padding: 0.5rem;
+      margin: 0.25rem 0;
+      background: none;
+      border: none;
+      text-align: left;
+      color: white;
+      cursor: pointer;
+    }
+    .profile-menu button:hover {
+      background-color: #374151;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 260px;
+      height: 100vh;
+      background-color: #1f2937;
+      padding: 1rem;
+      display: none;
+      flex-direction: column;
+      z-index: 998;
+    }
+    .sidebar.show {
+      display: flex;
+    }
+    .sidebar a {
+      color: white;
+      text-decoration: none;
+      padding: 0.5rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .sidebar h4 {
+      color: #9ca3af;
+      margin-top: 1.5rem;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border-color);
+    }
+    .card h2, .card h3 {
+      color: var(--link-color);
+    }
+    .card p {
+      color: var(--text-color);
+      font-size: 0.95rem;
+    }
+    .btn {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background-color: var(--btn-bg);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 1rem;
+      width: 100%;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: var(--btn-hover);
+    }
+    .go-dashboard {
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      text-align: center;
+      gap: 0.5rem;
+      color: var(--link-color);
+      font-size: 0.95rem;
+      text-decoration: none;
     }
-    .container {
-      background-color: #1c1c2c;
+    .go-dashboard:hover {
+      text-decoration: underline;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .modal-content {
+      background: #1f2937;
       padding: 2rem;
       border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      text-align: center;
+      max-width: 300px;
     }
-    h1 {
+    .modal-content p {
+      color: #d1d5db;
       margin-bottom: 1rem;
     }
-    p {
-      color: gray;
+    .modal-content button {
+      background-color: #3b82f6;
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Welcome to TradeOrbit!</h1>
-    <p>You have successfully logged in.</p>
+  <div class="top-nav">
+    <button class="menu-icon" onclick="toggleSidebar()">☰</button>
+    <div class="top-right">
+      <span class="toggle-mode" onclick="toggleMode()">🌓</span>
+      <div class="profile" onclick="toggleProfileMenu()">AC</div>
+    </div>
+    <div class="profile-menu" id="profileMenu">
+      <p>Ab Cd</p>
+      <small>abcdwxyz@gmail.com</small>
+      <button onclick="location.href='profile_page.html'">👤 View Profile</button>
+      <button onclick="location.href='funds_page.html'">➕ Add Funds</button>
+      <button onclick="location.href='funds_page.html'">➖ Withdraw Funds</button>
+      <button onclick="logoutUser()">↪️ Log out</button>
+    </div>
   </div>
+
+  <div class="sidebar" id="sidebar">
+    <h2>StockOrient</h2>
+    <a href="home_page.html">🏠 Home</a>
+    <a href="dashboard_page.html">📊 Dashboard</a>
+    <a href="trade_page.html">🔁 Trade</a>
+    <a href="marketoverview_page.html">📈 Market Overview</a>
+    <a href="indianmarket_page.html">🇮🇳 Indian Market</a>
+    <a href="forexcrypto_page.html">🔗 Forex & Crypto</a>
+    <a href="economiccalendar_page.html">📅 Economic Calendar</a>
+    <a href="myaccount_page.html">👤 My Account</a>
+    <a href="funds_page.html">🏛️ Funds</a>
+    <h4>Information</h4>
+    <a href="margintrading_page.html">📈 Margin Trading</a>
+    <a href="aboutus_page.html">ℹ️ About Us</a>
+    <a href="contactus_page.html">✉️ Contact Us</a>
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2>Welcome to StockOrient!</h2>
+      <p>Let's get your account ready for trading.</p>
+    </div>
+
+    <div class="card">
+      <h3>Step 1: Complete Your KYC</h3>
+      <p>Verify your identity to secure your account and comply with regulations.</p>
+      <button class="btn" onclick="location.href='kyc_page.html'">Complete KYC Verification →</button>
+    </div>
+
+    <div class="card">
+      <h3>Step 2: Add Funds</h3>
+      <p>Deposit funds to start trading, including exploring margin trading options with up to 5x leverage.</p>
+      <button class="btn" onclick="showKYCModal()">Add Funds →</button>
+    </div>
+
+    <div style="text-align:center">
+      <a href="dashboard_page.html" class="go-dashboard">🏠 Go to Dashboard</a>
+    </div>
+  </div>
+
+  <div class="modal" id="kycModal">
+    <div class="modal-content">
+      <p>Complete KYC first to proceed</p>
+      <button onclick="location.href='kyc_page.html'">Verify KYC</button>
+    </div>
+  </div>
+
+  <div class="modal" id="logoutModal">
+    <div class="modal-content">
+      <p>Logout successful</p>
+      <button onclick="location.href='home_page.html'">OK</button>
+    </div>
+  </div>
+
+  <script>
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("show");
+    }
+
+    function toggleProfileMenu() {
+      document.getElementById("profileMenu").classList.toggle("show");
+    }
+
+    function toggleMode() {
+      const currentTheme = document.body.getAttribute('data-theme');
+      if (currentTheme === 'light') {
+        document.body.removeAttribute('data-theme');
+        localStorage.removeItem('theme');
+      } else {
+        document.body.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+
+    window.onload = function() {
+      if (localStorage.getItem('theme') === 'light') {
+        document.body.setAttribute('data-theme', 'light');
+      }
+    };
+
+    function showKYCModal() {
+      document.getElementById("kycModal").style.display = "flex";
+    }
+
+    function logoutUser() {
+      document.getElementById("profileMenu").classList.remove("show");
+      document.getElementById("logoutModal").style.display = "flex";
+    }
+
+    window.onclick = function(e) {
+      const modals = ["kycModal", "logoutModal"];
+      modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (e.target === modal) modal.style.display = "none";
+      });
+    }
+  </script>
 </body>
 </html>
