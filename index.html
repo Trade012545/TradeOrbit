@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradeOrbit - Home</title>
+  <style>
+    :root {
+      --bg-color: #0f0f1a;
+      --text-color: white;
+      --accent-color: #3b82f6;
+      --card-bg: #1c1c2c;
+    }
+
+    [data-theme="light"] {
+      --bg-color: white;
+      --text-color: #111827;
+      --card-bg: #f3f4f6;
+    }
+
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background-color: var(--card-bg);
+      flex-wrap: wrap;
+    }
+
+    .nav-left, .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo {
+      font-weight: bold;
+      color: var(--accent-color);
+    }
+
+    a {
+      color: var(--text-color);
+      text-decoration: none;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--text-color);
+      color: var(--text-color);
+    }
+
+    .btn-accent {
+      background-color: var(--accent-color);
+      color: white;
+    }
+
+    .section {
+      padding: 2rem 1rem;
+      text-align: center;
+    }
+
+    .section h1, .section h2 {
+      font-size: 1.5rem;
+    }
+
+    .highlight {
+      color: var(--accent-color);
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 10px;
+      padding: 1rem;
+      margin: 1rem auto;
+      max-width: 600px;
+      text-align: left;
+    }
+
+    .icon-circle {
+      width: 40px;
+      height: 40px;
+      background-color: var(--accent-color);
+      border-radius: 50%;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .card h3 {
+      margin: 0.5rem 0;
+    }
+
+    .card a {
+      color: var(--accent-color);
+      display: inline-block;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .testimonials {
+      max-width: 600px;
+      margin: auto;
+    }
+
+    .testimonial {
+      background-color: var(--card-bg);
+      border-radius: 10px;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+
+    .final-cta {
+      background-color: #3b82f6;
+      color: white;
+      border-radius: 10px;
+      padding: 1.5rem;
+      max-width: 600px;
+      margin: 2rem auto;
+    }
+
+    .toggle-mode {
+      cursor: pointer;
+      font-size: 1.2rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem;
+      font-size: 0.8rem;
+      background-color: var(--card-bg);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav-left">
+      <div class="logo">📊 TradeOrbit</div>
+      <a href="about_page.html">About</a>
+      <a href="contact_page.html">Contact</a>
+    </div>
+    <div class="nav-right">
+      <span class="toggle-mode" onclick="toggleMode()">🌓</span>
+      <a href="login_page.html" class="btn btn-outline">Login</a>
+      <a href="register_page.html" class="btn btn-accent">Register</a>
+    </div>
+  </header>
+
+  <section class="section">
+    <h1>Trade Smarter, Not Harder with <span class="highlight">TradeOrbit</span></h1>
+    <p>Get one stop solution for trading in Stocks, Forex, Crypto, etc. at one place <br>
+       Explore this opportunites using margin benefit and Capital leverage<br>
+       And the best part, trade with the lowest trade fees and brokerage in every segment!</p>
+    <a href="register_page.html" class="btn btn-accent">Get Started →</a>
+  </section>
+
+  <section class="section">
+    <h2>Why Choose TradeOrbit?</h2>
+
+    <div class="card">
+      <div class="icon-circle">📊</div>
+      <h3>Advanced Trading Tools</h3>
+      <p>Access real-time market data, interactive charts, an economic calendar, and a suite of analytical tools to make informed decisions.</p>
+      <a href="#">Explore Tools →</a>
+    </div>
+
+    <div class="card">
+      <div class="icon-circle">🔒</div>
+      <h3>Bank-Grade Security</h3>
+      <p>Secure your trades and personal data with our advanced encryption and multi-layered security protocols.</p>
+      <a href="#">Learn More →</a>
+    </div>
+
+    <div class="card">
+      <div class="icon-circle">📱</div>
+      <h3>User-Friendly Interface</h3>
+      <p>Enjoy seamless and intuitive trading with our easy-to-navigate dashboard, built for traders of all levels.</p>
+      <a href="#">See How →</a>
+    </div>
+
+
+    <div class="card">
+      <div class="icon-circle">🤖</div>
+      <h3>AI-Powered Insights</h3>
+      <p>Leverage the power of AI to understand the market better and make smart trading decisions.</p>
+      <a href="#">Explore AI Insights →</a>
+    </div>
+
+    <div class="card">
+      <div class="icon-circle">🛡️</div>
+      <h3>Fortified Secure KYC</h3>
+      <p>Onboard quickly with fast and secure KYC verification that follows all latest compliance laws.</p>
+      <a href="#">Start KYC Process →</a>
+    </div>
+
+    <div class="card">
+      <div class="icon-circle">🎧</div>
+      <h3>Dedicated Support</h3>
+      <p>24/7 customer support for your trading needs. We're always here to help you grow.</p>
+      <a href="#">Contact Support →</a>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Our Competitive <span class="highlight">Advantage</span></h2>
+
+    <div class="card">
+      <div class="icon-circle">🏦</div>
+      <h3>₹0 Account Opening Fees</h3>
+      <p>Open an account for absolutely no cost and experience premium features without limits.</p>
+      <a href="#">Open Account →</a>
+    </div>
+
+    <div class="card">
+      <div class="icon-circle">📃</div>
+      <h3>₹0 Annual Maintenance</h3>
+      <p>No yearly charges! Enjoy your trading journey with zero hassle fees.</p>
+      <a href="#">Enjoy the Benefits →</a>
+    </div>
+
+    <div class="card">
+      <div class="icon-circle">⚡</div>
+      <h3>Lowest brokerage</h3>
+      <p>We offer lowest trades fees and brokerage per trade in this segment</p>
+      <a href="#">Learn Real Pricing →</a>
+    </div>
+  </section>
+
+  <section class="section testimonials">
+    <h2>Loved by Traders Like You</h2>
+    <div class="testimonial">
+      <p>⭐⭐⭐⭐⭐</p>
+      <p>"This is hands down the best trading platform I’ve ever used. Super smooth, informative, and low cost."</p>
+      <p><strong>Priya Sharma</strong> – Delhi</p>
+    </div>
+    <div class="testimonial">
+      <p>⭐⭐⭐⭐⭐</p>
+      <p>"Awesome experience for a beginner like me. Their tools helped me start trading with confidence."</p>
+      <p><strong>Rahul Mehra</strong> – Mumbai</p>
+    </div>
+    <div class="testimonial">
+      <p>⭐⭐⭐⭐</p>
+      <p>"The clean UI and fast experience are excellent. Support team is very helpful!"</p>
+      <p><strong>Jatin Verma</strong> – Pune</p>
+    </div>
+  </section>
+
+  <section class="final-cta">
+    <h3>Ready to Elevate Your Trading Game?</h3>
+    <ul style="text-align:left;">
+      <li>📊 Real-time market & AI insights</li>
+      <li>⚡ Advanced mobile and web trading tools</li>
+      <li>💰 ₹0 Account opening and transparent rates</li>
+      <li>✅ Start Your StockOrient journey today!</li>
+    </ul>
+    <a href="register_page.html" class="btn btn-outline" style="margin-top:1rem;">Create Your Account Today</a>
+  </section>
+
+  <footer>
+    © 2025 TradeOrbit. All rights reserved.
+  </footer>
+
+  <script>
+    function toggleMode() {
+      const currentTheme = document.body.getAttribute('data-theme');
+      if (currentTheme === 'light') {
+        document.body.removeAttribute('data-theme');
+      } else {
+        document.body.setAttribute('data-theme', 'light');
+      }
+    }
+  </script>
+</body>
+</html>
