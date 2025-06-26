@@ -79,14 +79,15 @@
       color: #3b82f6;
       text-decoration: none;
     }
-    .forgot-password {
+    .forgot {
       text-align: right;
+      font-size: 0.9rem;
+      margin-top: -0.5rem;
       margin-bottom: 1rem;
     }
-    .forgot-password a {
+    .forgot a {
       color: #3b82f6;
       text-decoration: none;
-      font-size: 0.9rem;
       cursor: pointer;
     }
   </style>
@@ -98,16 +99,16 @@
     <p style="text-align:center; color: gray;">Sign in to continue to your TradeOrbit account.</p>
     <form id="login-form">
       <div class="input-group">
-        <label for="login">Email or Mobile</label>
-        <input type="text" id="login" required>
+        <label>Email or Mobile</label>
+        <input type="text" id="identifier" required>
       </div>
       <div class="input-group password-wrapper">
-        <label for="password">Password</label>
+        <label>Password</label>
         <input type="password" id="password" required>
         <span class="toggle-password" onclick="togglePassword('password')">👁️</span>
       </div>
-      <div class="forgot-password">
-        <a onclick="showResetDialog()">Forgot password?</a>
+      <div class="forgot">
+        <a onclick="showForgotPasswordDialog()">Forgot password?</a>
       </div>
       <button type="submit">Sign In</button>
     </form>
@@ -127,60 +128,54 @@
     const databaseID = "685d0c85000aa071581a";
     const collectionID = "685d0ca4003e789c372d";
 
-    async function togglePassword(id) {
+    function togglePassword(id) {
       const field = document.getElementById(id);
       field.type = field.type === "password" ? "text" : "password";
     }
 
-    function showResetDialog() {
-      if (confirm("Users can request a password reset by contacting customer support.")) {
+    function showForgotPasswordDialog() {
+      const confirmed = confirm("Users can request reset password by contacting customer support. Click OK to go to contact page.");
+      if (confirmed) {
         window.location.href = "contact_page.html";
-      }
-    }
-
-    async function loginUser(login, password) {
-      let actualEmail = login;
-
-      // If input looks like mobile number, try to resolve to email
-      if (/^\d{10}$/.test(login)) {
-        try {
-          const res = await databases.listDocuments(databaseID, collectionID, [
-            Appwrite.Query.equal("mobile", login)
-          ]);
-          if (res.total === 0) {
-            throw new Error("Mobile number not found.");
-          }
-          actualEmail = res.documents[0].email;
-        } catch (err) {
-          alert("Error: " + JSON.stringify(error));
-          return;
-        }
-      }
-
-      try {
-        // Check if a session is active
-        await account.get();
-        await account.deleteSession("current");
-      } catch (_) {
-        // No active session, safe to continue
-      }
-
-      try {
-        await account.createEmailSession(actualEmail, password);
-        alert("Login successful!");
-        window.location.href = "main_page.html";
-      } catch (error) {
-        alert("Error: " + JSON.stringify(error));
-
       }
     }
 
     document.getElementById("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const login = document.getElementById("login").value.trim();
+
+      const identifier = document.getElementById("identifier").value.trim();
       const password = document.getElementById("password").value;
-      await loginUser(login, password);
-      
+
+      try {
+        const current = await account.get();
+        if (current) {
+          await account.deleteSession("current");
+        }
+      } catch (_) {}
+
+      const isEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(identifier);
+
+      try {
+        let emailToUse = identifier;
+
+        if (!isEmail) {
+          const result = await databases.listDocuments(databaseID, collectionID, [
+            Appwrite.Query.equal("mobile", identifier)
+          ]);
+
+          if (result.documents.length === 0) {
+            throw new Error("Mobile number not found in database.");
+          }
+
+          emailToUse = result.documents[0].email;
+        }
+
+        await account.createEmailSession(emailToUse, password);
+        window.location.href = "main_page.html";
+      } catch (error) {
+        console.error(error);
+        alert("Login failed: " + (error.message || "Unknown error"));
+      }
     });
   </script>
 </body>
