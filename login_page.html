@@ -152,7 +152,7 @@
           }
           actualEmail = res.documents[0].email;
         } catch (err) {
-          alert("Login failed: " + err.message);
+          alert("Error: " + JSON.stringify(error));
           return;
         }
       }
@@ -170,7 +170,8 @@
         alert("Login successful!");
         window.location.href = "main_page.html";
       } catch (error) {
-        alert("Login failed: " + (error.message || "Invalid credentials"));
+        alert("Error: " + JSON.stringify(error));
+
       }
     }
 
@@ -179,6 +180,7 @@
       const login = document.getElementById("login").value.trim();
       const password = document.getElementById("password").value;
       await loginUser(login, password);
+      
     });
   </script>
 </body>
