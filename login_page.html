@@ -45,13 +45,24 @@
       margin-bottom: 0.25rem;
     }
     input[type="text"],
-    input[type="password"] {
+    input[type="password"],
+    select {
       width: 100%;
       padding: 0.5rem;
       border: 1px solid #333;
       border-radius: 6px;
       background-color: #0f0f1a;
       color: white;
+    }
+    .mobile-flex {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .mobile-flex select {
+      flex: 1;
+    }
+    .mobile-flex input {
+      flex: 2;
     }
     .password-wrapper {
       position: relative;
@@ -102,6 +113,15 @@
         <label>Email or Mobile</label>
         <input type="text" id="identifier" required>
       </div>
+      <div class="input-group" id="country-code-group" style="display: none;">
+        <label>Country Code</label>
+        <select id="countryCode">
+          <option value="+91">+91 (IN)</option>
+          <option value="+1">+1 (US)</option>
+          <option value="+44">+44 (UK)</option>
+          <option value="+61">+61 (AU)</option>
+        </select>
+      </div>
       <div class="input-group password-wrapper">
         <label>Password</label>
         <input type="password" id="password" required>
@@ -128,6 +148,11 @@
     const databaseID = "685d0c85000aa071581a";
     const collectionID = "685d0ca4003e789c372d";
 
+    document.getElementById("identifier").addEventListener("input", (e) => {
+      const val = e.target.value.trim();
+      document.getElementById("country-code-group").style.display = /^\d{10}$/.test(val) ? "block" : "none";
+    });
+
     function togglePassword(id) {
       const field = document.getElementById(id);
       field.type = field.type === "password" ? "text" : "password";
@@ -145,12 +170,11 @@
 
       const identifier = document.getElementById("identifier").value.trim();
       const password = document.getElementById("password").value;
+      const countryCode = document.getElementById("countryCode").value;
 
       try {
         const current = await account.get();
-        if (current) {
-          await account.deleteSession("current");
-        }
+        if (current) await account.deleteSession("current");
       } catch (_) {}
 
       const isEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(identifier);
@@ -159,8 +183,10 @@
         let emailToUse = identifier;
 
         if (!isEmail) {
+          const fullMobile = `${countryCode}${identifier}`;
+
           const result = await databases.listDocuments(databaseID, collectionID, [
-            Appwrite.Query.equal("mobile", identifier)
+            Appwrite.Query.equal("mobile", fullMobile)
           ]);
 
           if (result.documents.length === 0) {
