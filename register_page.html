@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Register - TradeOrbit</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@appwrite/sdk@12.0.1/dist/appwrite.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.0"></script>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center px-4">
   <div class="w-full max-w-md bg-gray-800 rounded-xl p-6 shadow-md relative">
@@ -23,33 +23,32 @@
     <form id="registerForm" class="space-y-4">
       <div>
         <label class="block mb-1">First Name</label>
-        <input type="text" id="firstName" class="w-full px-3 py-2 rounded bg-gray-700" placeholder="Enter first name" required>
+        <input type="text" id="firstName" class="w-full px-3 py-2 rounded bg-gray-700" required>
       </div>
       <div>
         <label class="block mb-1">Last Name</label>
-        <input type="text" id="lastName" class="w-full px-3 py-2 rounded bg-gray-700" placeholder="Enter last name" required>
+        <input type="text" id="lastName" class="w-full px-3 py-2 rounded bg-gray-700" required>
       </div>
       <div>
         <label class="block mb-1">Mobile Number</label>
-        <input type="tel" id="mobile" class="w-full px-3 py-2 rounded bg-gray-700" placeholder="Enter mobile number" required>
+        <input type="tel" id="mobile" class="w-full px-3 py-2 rounded bg-gray-700" required>
       </div>
       <div>
         <label class="block mb-1">Email</label>
-        <input type="email" id="email" class="w-full px-3 py-2 rounded bg-gray-700" placeholder="Enter your email" required>
-        <button type="button" id="verifyEmailBtn" class="text-sm text-blue-400 underline mt-1">Verify Email</button>
-        <p id="emailStatus" class="text-xs text-green-400 hidden">Verification link sent. Please check your email.</p>
+        <input type="email" id="email" class="w-full px-3 py-2 rounded bg-gray-700" required>
+        <p class="text-xs text-gray-400">A verification link will be sent to this email.</p>
       </div>
       <div>
         <label class="block mb-1">Password</label>
         <div class="relative">
-          <input type="password" id="password" class="w-full px-3 py-2 rounded bg-gray-700" placeholder="••••••••" disabled>
+          <input type="password" id="password" class="w-full px-3 py-2 rounded bg-gray-700" required>
           <span class="absolute right-3 top-2 cursor-pointer" onclick="togglePassword('password')">👁️</span>
         </div>
       </div>
       <div>
         <label class="block mb-1">Confirm Password</label>
         <div class="relative">
-          <input type="password" id="confirmPassword" class="w-full px-3 py-2 rounded bg-gray-700" placeholder="••••••••" disabled>
+          <input type="password" id="confirmPassword" class="w-full px-3 py-2 rounded bg-gray-700" required>
           <span class="absolute right-3 top-2 cursor-pointer" onclick="togglePassword('confirmPassword')">👁️</span>
         </div>
       </div>
@@ -66,57 +65,51 @@
   <div id="successDialog" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-gray-800 p-6 rounded-lg max-w-sm text-center">
       <h3 class="text-lg font-semibold mb-2">Registration Successful</h3>
-      <p class="mb-4">Your account has been created successfully.</p>
-      <button onclick="login_page.html" class="bg-blue-500 px-4 py-2 rounded text-white">Proceed to Login</button>
+      <p class="mb-4">A verification email has been sent. Please check your inbox.</p>
+      <button onclick="window.location.href='login_page.html'" class="bg-blue-500 px-4 py-2 rounded text-white">Proceed to Login</button>
     </div>
   </div>
 
   <script>
-    const sdk = new Appwrite();
-    sdk.setEndpoint('https://cloud.appwrite.io/v1').setProject('685cb0a90017cc71f99e'); // replace YOUR_PROJECT_ID
+    const client = new Appwrite.Client();
+    client
+      .setEndpoint('https://cloud.appwrite.io/v1') // Don't forget trailing slash
+      .setProject('685cb0a90017cc71f99e');
 
-    function togglePassword(fieldId) {
-      const field = document.getElementById(fieldId);
-      field.type = field.type === 'password' ? 'text' : 'password';
+    const account = new Appwrite.Account(client);
+
+    function togglePassword(id) {
+      const input = document.getElementById(id);
+      input.type = input.type === 'password' ? 'text' : 'password';
     }
-
-    document.getElementById('verifyEmailBtn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value;
-      if (!email.includes('@')) return alert("Enter a valid email");
-
-      try {
-        await sdk.account.createVerification('https://your-username.github.io/tradeorbit/register_page.html');
-        document.getElementById('emailStatus').classList.remove('hidden');
-        document.getElementById('password').disabled = false;
-        document.getElementById('confirmPassword').disabled = false;
-      } catch (err) {
-        alert("Error sending verification email");
-        console.error(err);
-      }
-    });
 
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const firstName = document.getElementById('firstName').value.trim();
       const lastName = document.getElementById('lastName').value.trim();
-      const email = document.getElementById('email').value.trim();
       const mobile = document.getElementById('mobile').value.trim();
+      const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
-      const termsChecked = document.getElementById('terms').checked;
+      const termsAccepted = document.getElementById('terms').checked;
 
+      // Validations
       if (firstName.length < 3 || lastName.length < 3) return alert('Name must be at least 3 characters.');
-      if (!/^\d{10}$/.test(mobile)) return alert('Enter a valid 10-digit mobile number.');
+      if (!/^\d{10}$/.test(mobile)) return alert('Mobile number must be 10 digits.');
       if (password !== confirmPassword) return alert('Passwords do not match.');
-      if (!termsChecked) return alert('Please accept the Terms and Conditions.');
+      if (!termsAccepted) return alert('Please accept the Terms and Conditions.');
 
       try {
-        await sdk.account.create('unique()', email, password, firstName + ' ' + lastName);
+        await account.create('unique()', email, password, firstName + ' ' + lastName);
+
+        // Send verification email
+        await account.createVerification('https://mohit123.github.io/tradeorbit/register_page.html'); // <-- UPDATE if GitHub username/repo changes
+
         document.getElementById('successDialog').classList.remove('hidden');
       } catch (err) {
-        alert("Error: " + err.message);
-        console.error(err);
+        console.error("Registration Error:", err);
+        alert("Registration failed: " + err.message);
       }
     });
   </script>
