@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - TradeOrbit</title>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: #0f0f1a;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background-color: #1c1c2c;
+      padding: 2rem;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+      position: relative;
+    }
+    .back-btn {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 1rem;
+    }
+    h2 {
+      text-align: center;
+    }
+    .input-group {
+      margin-bottom: 1.25rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background-color: #0f0f1a;
+      color: white;
+    }
+    .password-wrapper {
+      position: relative;
+    }
+    .toggle-password {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
+    .forgot-password {
+      text-align: right;
+      margin-top: -10px;
+      margin-bottom: 10px;
+    }
+    .forgot-password a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .footer-text {
+      text-align: center;
+      margin-top: 1rem;
+    }
+    .footer-text a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <a href="index.html" class="back-btn">&larr; Back</a>
+  <div class="container">
+    <h2>Welcome Back!</h2>
+    <p style="text-align:center; color: gray;">Sign in to continue to your TradeOrbit account.</p>
+    <form id="login-form">
+      <div class="input-group">
+        <label for="loginID">Email or Mobile</label>
+        <input type="text" id="loginID" required placeholder="Enter your email or mobile number">
+      </div>
+      <div class="input-group password-wrapper">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" required>
+        <span class="toggle-password" onclick="togglePassword('loginPassword')">👁️</span>
+      </div>
+      <div class="forgot-password">
+        <a href="#" onclick="showSupportDialog()">Forgot password?</a>
+      </div>
+      <button type="submit">Sign In</button>
+    </form>
+    <div class="footer-text">
+      Don't have an account? <a href="register_page.html">Sign up</a>
+    </div>
+  </div>
+
+  <!-- Support Dialog -->
+  <dialog id="supportDialog">
+    <p>Users can request reset password by contacting customer support.</p>
+    <p><a href="contact_page.html">Contact Customer Support</a></p>
+    <button onclick="document.getElementById('supportDialog').close()">Close</button>
+  </dialog>
+
+  <script>
+    const client = new Appwrite.Client()
+      .setEndpoint("https://nyc.cloud.appwrite.io/v1")
+      .setProject("685cb0a90017cc71f99e");
+
+    const account = new Appwrite.Account(client);
+
+    function togglePassword(id) {
+      const field = document.getElementById(id);
+      field.type = field.type === "password" ? "text" : "password";
+    }
+
+    function showSupportDialog() {
+      document.getElementById("supportDialog").showModal();
+    }
+
+    document.getElementById("login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const loginID = document.getElementById("loginID").value.trim();
+      const password = document.getElementById("loginPassword").value;
+
+      try {
+        await account.createEmailSession(loginID, password);
+        window.location.href = "main_page.html";
+      } catch (err) {
+        alert("Login failed: " + (err.message || "Invalid credentials."));
+        console.error(err);
+      }
+    });
+  </script>
+</body>
+</html>
