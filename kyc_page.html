@@ -32,9 +32,6 @@
       color: var(--text-color);
     }
     .top-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
       padding: 1rem;
       background-color: #161925;
       border-bottom: 1px solid var(--border-color);
@@ -130,12 +127,13 @@
     .modal-content button {
       background-color: #3b82f6; border: none; color: white;
       padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer;
+     }
     }
   </style>
 </head>
 <body>
   <div class="top-nav">
-    <button class="menu-icon" onclick="alert('Sidebar not implemented')">☰</button>
+    <button class="menu-icon" onclick="toggleSidebar()">☰</button>
     <div class="top-right">
       <span class="toggle-mode" onclick="toggleMode()">🌓</span>
       <div class="profile" onclick="toggleProfileMenu()">--</div>
@@ -149,7 +147,6 @@
       <button onclick="logoutUser()">↪️ Log out</button>
     </div>
   </div>
-
   <div class="container">
     <div class="card">
       <h2>KYC Verification</h2>
@@ -176,21 +173,17 @@
       <button class="btn" onclick="submitKYC()">Submit KYC</button>
     </div>
   </div>
-
   <div class="modal" id="uploadModal">
     <div class="modal-content">
       <p id="uploadMessage">Uploading...</p>
     </div>
   </div>
-
   <div class="modal" id="kycModal">
     <div class="modal-content">
       <p>KYC Verified</p>
       <button onclick="location.href='funds_page.html'">Proceed to Deposit & Trade</button>
     </div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
   <script>
     const client = new Appwrite.Client()
       .setEndpoint("https://nyc.cloud.appwrite.io/v1")
@@ -199,14 +192,16 @@
     const account = new Appwrite.Account(client);
     const databases = new Appwrite.Databases(client);
     const storage = new Appwrite.Storage(client);
-    const databaseId = "685d0c85000aa071581a"; // Or MainDB
+    const databaseId = "685d0c85000aa071581a";
     const collectionId = "685deb1c003b43301125";
     const bucketId = "685dee56002dac3412a7";
 
+    async function toggleSidebar() {
+      alert("Sidebar not implemented yet");
+    }
     function toggleProfileMenu() {
       document.getElementById("profileMenu").classList.toggle("show");
     }
-
     function toggleMode() {
       const theme = document.body.getAttribute('data-theme');
       if (theme === 'light') {
@@ -217,7 +212,6 @@
         localStorage.setItem('theme', 'light');
       }
     }
-
     function logoutUser() {
       account.deleteSession("current").then(() => {
         window.location.href = "index.html";
@@ -232,22 +226,29 @@
         alert("Please enter number and select file");
         return;
       }
-      document.getElementById("uploadMessage").textContent = "Uploading...";
-      document.getElementById("uploadModal").style.display = "flex";
+      const modal = document.getElementById("uploadModal");
+      const message = document.getElementById("uploadMessage");
+      message.textContent = "Uploading...";
+      modal.style.display = "flex";
       try {
-        const uploaded = await storage.createFile(bucketId, Appwrite.ID.unique(), file);
+        const user = await account.get();
+        const uploaded = await storage.createFile(bucketId, Appwrite.ID.unique(), file, [
+          Appwrite.Permission.read(Appwrite.Role.user(user.$id)),
+          Appwrite.Permission.write(Appwrite.Role.user(user.$id))
+        ]);
         await databases.createDocument(databaseId, collectionId, Appwrite.ID.unique(), {
+          userId: user.$id,
           userType: type,
           idNumber: number,
           fileId: uploaded.$id
         });
-        document.getElementById("uploadModal").style.display = "none";
+        modal.style.display = "none";
         document.getElementById(type + "FileStatus").style.display = "block";
         document.getElementById(type + "NumberStatus").style.display = "block";
       } catch (e) {
         console.error(e);
-        alert("Upload failed");
-        document.getElementById("uploadModal").style.display = "none";
+        modal.style.display = "none";
+        alert("Upload failed: " + (e.message || "unknown error"));
       }
     }
 
