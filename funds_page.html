@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Funds Page - StockOrient</title>
   <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" />
   <style>
     :root {
       --bg-color: #0f111d;
@@ -31,6 +32,8 @@
       padding: 1rem;
       background-color: var(--card-bg);
       border-bottom: 1px solid var(--border-color);
+      position: relative;
+      z-index: 1001;
     }
     .menu-icon {
       font-size: 1.5rem;
@@ -85,6 +88,7 @@
       padding: 1rem;
       display: none;
       flex-direction: column;
+      z-index: 998;
     }
     .sidebar.show {
       display: flex;
@@ -166,8 +170,8 @@
       <div class="profile" onclick="toggleProfileMenu()" id="profileInitials">AC</div>
     </div>
     <div class="profile-menu" id="profileMenu">
-      <p id="userName">loading...</p>
-      <small id="userEmail">loading...</small>
+      <p id="userName">User Name</p>
+      <small id="userEmail">user@email.com</small>
       <button onclick="location.href='profile_page.html'">👤 View Profile</button>
       <button onclick="location.href='funds_page.html'">➕ Add Funds</button>
       <button onclick="location.href='funds_page.html'">➖ Withdraw Funds</button>
@@ -193,9 +197,10 @@
   </div>
 
   <div class="container" id="appContent">
-    <!-- Balance and Transaction Data will be loaded here by JS -->
+    <!-- Content loaded via JS -->
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
   <script>
     const client = new Appwrite.Client()
       .setEndpoint("https://cloud.appwrite.io/v1")
@@ -214,7 +219,6 @@
       try {
         const user = await account.get();
         currentUserId = user.$id;
-
         document.getElementById("userName").innerText = user.name;
         document.getElementById("userEmail").innerText = user.email;
         document.getElementById("profileInitials").innerText = user.name.slice(0, 2).toUpperCase();
@@ -222,19 +226,7 @@
         const balanceData = await databases.listDocuments(DB_ID, BAL_COLLECTION, [
           Appwrite.Query.equal("userId", currentUserId)
         ]);
-
         const balance = balanceData.documents[0]?.balance || 0;
-
-        const balanceCard = `
-          <div class="card">
-            <h2>Manage Funds</h2>
-            <p><strong>Available Balance</strong><br>
-              <span style="font-size: 1.5rem; color: #60a5fa;">₹${balance.toFixed(2)}</span>
-            </p>
-            <p style="font-size: 0.9rem; color: #9ca3af;">
-              Maximize your trading power with up to 5x leverage on your capital deposits.
-            </p>
-          </div>`;
 
         const transData = await databases.listDocuments(DB_ID, TRANS_COLLECTION, [
           Appwrite.Query.equal("userId", currentUserId)
@@ -242,31 +234,31 @@
 
         const history = transData.documents.map(doc => `<li>${doc.type}: ₹${doc.amount} - ${doc.status}</li>`).join('') || '<p>No transactions yet. Your fund movements will appear here.</p>';
 
-        const tabSection = `
-          <div class="tabs">
-            <button class="active">Add Funds</button>
-            <button onclick="location.href='withdraw_page.html'">Withdraw</button>
-          </div>
-          <div class="card">
-            <h3>Add Funds</h3>
-            <div class="option-box" onclick="location.href='alchemy_page.html'">
-              <span>💳 UPI</span>
-              <span>›</span>
-            </div>
-            <div class="option-box" onclick="location.href='wallet_page.html'">
-              <span>🏦 Net Banking (NEFT/RTGS/IMPS)</span>
-              <span>›</span>
-            </div>
-            <p style="color: #9ca3af;">After initiating a transfer, click Confirm Deposit.</p>
-            <button class="btn" onclick="location.href='deposit_page.html'">Confirm Deposit</button>
-          </div>
-          <div class="card">
-            <h3>🔄 Transaction History</h3>
-            <ul style="padding-left: 1.2rem;">${history}</ul>
-            <button class="btn">⬇️ Download Full History</button>
-          </div>`;
+        const appHTML = `
+        <div class="card">
+          <h2>Manage Funds</h2>
+          <p><strong>Available Balance</strong><br><span style="font-size: 1.5rem; color: #60a5fa;">₹${balance.toFixed(2)}</span></p>
+          <p style="font-size: 0.9rem; color: #9ca3af;">Maximize your trading power with up to 5x leverage on your capital deposits.</p>
+        </div>
+        <div class="tabs">
+          <button class="active">Add Funds</button>
+          <button onclick="location.href='withdraw_page.html'">Withdraw</button>
+        </div>
+        <div class="card">
+          <h3>Add Funds</h3>
+          <div class="option-box" onclick="location.href='alchemy_page.html'"><span>💳 UPI</span><span>›</span></div>
+          <div class="option-box" onclick="location.href='wallet_page.html'"><span>🏦 Net Banking (NEFT/RTGS/IMPS)</span><span>›</span></div>
+          <p style="color: #9ca3af;">After initiating a transfer, click Confirm Deposit.</p>
+          <button class="btn" onclick="location.href='deposit_page.html'">Confirm Deposit</button>
+        </div>
+        <div class="card">
+          <h3>🔄 Transaction History</h3>
+          <ul style="padding-left: 1.2rem;">${history}</ul>
+          <button class="btn">⬇️ Download Full History</button>
+        </div>`;
 
-        document.getElementById("appContent").innerHTML = balanceCard + tabSection;
+        document.getElementById("appContent").innerHTML = appHTML;
+
       } catch (err) {
         console.error("Error loading user data:", err);
       }
@@ -275,11 +267,9 @@
     function toggleSidebar() {
       document.getElementById("sidebar").classList.toggle("show");
     }
-
     function toggleProfileMenu() {
       document.getElementById("profileMenu").classList.toggle("show");
     }
-
     function toggleMode() {
       const currentTheme = document.body.getAttribute('data-theme');
       if (currentTheme === 'light') {
