@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Funds Page - StockOrient</title>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+  <style>
+    :root {
+      --bg-color: #0f111d;
+      --text-color: white;
+      --card-bg: #161925;
+      --border-color: rgba(255,255,255,0.05);
+      --link-color: #60a5fa;
+      --btn-bg: #3b82f6;
+      --btn-hover: #2563eb;
+    }
+    [data-theme="light"] {
+      --bg-color: white;
+      --text-color: #111827;
+      --card-bg: #f3f4f6;
+      --border-color: #e5e7eb;
+      --link-color: #2563eb;
+      --btn-bg: #3b82f6;
+      --btn-hover: #2563eb;
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+    .top-nav, .menu-icon, .top-right, .toggle-mode, .profile, .profile-menu,
+    .sidebar, .container, .card, .tabs, .option-box, .btn, input[type="text"] {
+      /* Keep existing styles */
+    }
+  </style>
+</head>
+<body>
+  <div class="top-nav">
+    <button class="menu-icon" onclick="toggleSidebar()">☰</button>
+    <div class="top-right">
+      <span class="toggle-mode" onclick="toggleMode()">🌓</span>
+      <div class="profile" onclick="toggleProfileMenu()">--</div>
+    </div>
+    <div class="profile-menu" id="profileMenu">
+      <p>Loading...</p>
+      <small>Loading...</small>
+      <button onclick="location.href='profile_page.html'">👤 View Profile</button>
+      <button onclick="location.href='funds_page.html'">➕ Add Funds</button>
+      <button onclick="location.href='funds_page.html'">➖ Withdraw Funds</button>
+      <button onclick="logoutUser()">↪️ Log out</button>
+    </div>
+  </div>
+
+  <div class="sidebar" id="sidebar">
+    <!-- Sidebar content same as before -->
+  </div>
+
+  <div class="container">
+    <div class="card">
+      <h2>Manage Funds</h2>
+      <p><strong>Available Balance</strong><br><span id="balanceAmount" style="font-size: 1.5rem; color: #60a5fa;">₹0.00</span></p>
+      <p style="font-size: 0.9rem;">Maximize your trading power with up to 5x leverage on your capital deposits. Our platform includes tools for real-time margin monitoring.</p>
+    </div>
+
+    <div class="tabs">
+      <button id="addTab" class="active" onclick="toggleTab('add')">➕ Add Funds</button>
+      <button id="withdrawTab" onclick="toggleTab('withdraw')">➖ Withdraw</button>
+    </div>
+
+    <div class="card" id="addSection">
+      <h3>Add Funds</h3>
+      <div class="option-box" onclick="location.href='alchemy_page.html'">
+        <span>💳 Deposit using Alchemy Pay</span>
+        <span>›</span>
+      </div>
+      <div class="option-box" onclick="location.href='wallet_page.html'">
+        <span>👛 Deposit from Wallet Transfer</span>
+        <span>›</span>
+      </div>
+    </div>
+
+    <div class="card" id="withdrawSection" style="display:none">
+      <h3>Withdraw Funds</h3>
+      <label>Amount to Withdraw (INR)</label>
+      <input type="text" placeholder="Enter amount">
+      <div class="option-box" onclick="location.href='alchemy_page.html'">
+        <span>💳 Withdraw using Alchemy Pay</span>
+        <span>›</span>
+      </div>
+      <div class="option-box" onclick="location.href='wallet_page.html'">
+        <span>👛 Transfer Withdrawal to Wallet</span>
+        <span>›</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>🔄 Transaction History</h3>
+      <div id="transactionList">
+        <p>Loading...</p>
+      </div>
+      <button class="btn">⬇️ Download Full History</button>
+    </div>
+  </div>
+
+  <script>
+    const client = new Appwrite.Client()
+      .setEndpoint("https://nyc.cloud.appwrite.io/v1")
+      .setProject("685cb0a90017cc71f99e");
+    const account = new Appwrite.Account(client);
+    const databases = new Appwrite.Databases(client);
+
+    const databaseId = "685d0c85000aa071581a";
+    const balanceCollectionId = "685e3dde000ecd0c99bc";
+    const transactionCollectionId = "685e3e53003af900cfce";
+
+    async function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("show");
+    }
+    function toggleProfileMenu() {
+      document.getElementById("profileMenu").classList.toggle("show");
+    }
+    function toggleMode() {
+      const currentTheme = document.body.getAttribute('data-theme');
+      if (currentTheme === 'light') {
+        document.body.removeAttribute('data-theme');
+        localStorage.removeItem('theme');
+      } else {
+        document.body.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+      }
+    }
+    function logoutUser() {
+      account.deleteSession("current").then(() => {
+        window.location.href = "index.html";
+      });
+    }
+    function toggleTab(type) {
+      const add = document.getElementById("addSection");
+      const withdraw = document.getElementById("withdrawSection");
+      document.getElementById("addTab").classList.remove("active");
+      document.getElementById("withdrawTab").classList.remove("active");
+      if (type === 'add') {
+        add.style.display = 'block';
+        withdraw.style.display = 'none';
+        document.getElementById("addTab").classList.add("active");
+      } else {
+        add.style.display = 'none';
+        withdraw.style.display = 'block';
+        document.getElementById("withdrawTab").classList.add("active");
+      }
+    }
+
+    window.onload = async function () {
+      if (localStorage.getItem('theme') === 'light') {
+        document.body.setAttribute('data-theme', 'light');
+      }
+      try {
+        const user = await account.get();
+        const initials = user.name.split(" ").map(n => n[0]).join("");
+        document.querySelector(".profile").textContent = initials;
+        document.querySelector(".profile-menu p").textContent = user.name;
+        document.querySelector(".profile-menu small").textContent = user.email;
+
+        const balanceData = await databases.listDocuments(databaseId, balanceCollectionId, [
+          Appwrite.Query.equal("userId", user.$id)
+        ]);
+        const balance = balanceData.documents.length ? balanceData.documents[0].balance : 0;
+        document.getElementById("balanceAmount").textContent = `₹${balance}`;
+
+        const txData = await databases.listDocuments(databaseId, transactionCollectionId, [
+          Appwrite.Query.equal("userId", user.$id),
+          Appwrite.Query.orderDesc("$createdAt")
+        ]);
+        const txList = document.getElementById("transactionList");
+        txList.innerHTML = "";
+        if (txData.documents.length === 0) {
+          txList.innerHTML = "<p>No deposit or withdrawal transaction is made yet.</p>";
+        } else {
+          txData.documents.forEach(tx => {
+            const div = document.createElement("div");
+            div.innerHTML = `
+              <p><strong>${tx.type}</strong> - ₹${tx.amount} <br>Status: ${tx.status}</p>
+              <hr>
+            `;
+            txList.appendChild(div);
+          });
+        }
+      } catch (err) {
+        alert("You are not logged in");
+        window.location.href = "login_page.html";
+      }
+    }
+  </script>
+</body>
+</html>
