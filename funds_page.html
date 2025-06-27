@@ -2,176 +2,85 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Funds Page - StockOrient</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Funds - TradeOrbit</title>
   <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon/fonts/remixicon.css" />
   <style>
     :root {
-      --bg-color: #0f111d;
-      --text-color: white;
-      --card-bg: #161925;
-      --border-color: rgba(255,255,255,0.05);
-      --link-color: #60a5fa;
-      --btn-bg: #3b82f6;
+      --bg: #0f111d;
+      --text: #fff;
+      --card: #161925;
+      --border: rgba(255,255,255,0.08);
+      --accent: #60a5fa;
+      --btn: #3b82f6;
       --btn-hover: #2563eb;
     }
     body {
-      margin: 0;
+      margin: 0; background: var(--bg); color: var(--text);
       font-family: 'Segoe UI', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-    }
-    .top-nav, .sidebar, .profile-menu, .container, .card, .tabs, .option-box, .btn {
-      transition: all 0.3s ease-in-out;
     }
     .top-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background-color: var(--card-bg);
-      border-bottom: 1px solid var(--border-color);
-      position: relative;
-      z-index: 1001;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem; background: var(--card); border-bottom: 1px solid var(--border);
     }
-    .menu-icon {
-      font-size: 1.5rem;
-      background: none;
-      border: 1px solid #374151;
-      border-radius: 8px;
-      padding: 4px 8px;
-      color: white;
-      cursor: pointer;
-    }
-    .top-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .toggle-mode {
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-    .profile {
-      width: 32px;
-      height: 32px;
-      background-color: #374151;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      cursor: pointer;
+    .menu-icon { cursor: pointer; font-size: 1.5rem; }
+    .top-right { display: flex; gap: 1rem; align-items: center; }
+    .profile { width: 32px; height: 32px; border-radius: 50%;
+      background: #374151; display: flex; justify-content: center; align-items: center; cursor: pointer; font-weight: bold;
     }
     .profile-menu {
-      display: none;
-      position: absolute;
-      top: 60px;
-      right: 1rem;
-      background-color: #1f2937;
-      border-radius: 10px;
-      padding: 1rem;
-      width: 220px;
-      z-index: 999;
+      display: none; position: absolute; right: 1rem; top: 60px;
+      background: #1f2937; border-radius: 8px; padding: 1rem; width: 220px;
     }
-    .profile-menu.show {
-      display: block;
-    }
+    .profile-menu.show { display: block; }
     .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 260px;
-      height: 100vh;
-      background-color: #1f2937;
-      padding: 1rem;
-      display: none;
-      flex-direction: column;
-      z-index: 998;
+      position: fixed; top: 0; left: 0; width: 240px; height: 100vh;
+      background: #1f2937; padding: 1rem; display: none; flex-direction: column;
     }
-    .sidebar.show {
-      display: flex;
-    }
+    .sidebar.show { display: flex; }
     .sidebar a {
-      color: white;
-      text-decoration: none;
-      padding: 0.5rem 0;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      color: white; text-decoration: none; padding: 0.5rem 0;
+      display: flex; align-items: center; gap: 0.5rem;
     }
-    .container {
-      max-width: 500px;
-      margin: 2rem auto;
-      padding: 1rem;
-    }
+    .container { max-width: 500px; margin: 2rem auto; padding: 1rem; }
     .card {
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      border: 1px solid var(--border-color);
+      background: var(--card); padding: 1.5rem; margin-bottom: 1.5rem;
+      border-radius: 12px; border: 1px solid var(--border);
     }
     .tabs {
-      display: flex;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 1rem;
+      display: flex; border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; margin-bottom: 1rem;
     }
     .tabs button {
-      flex: 1;
-      padding: 0.75rem;
-      background: none;
-      border: none;
-      color: var(--text-color);
-      cursor: pointer;
+      flex: 1; padding: 0.75rem; border: none; background: none; color: var(--text); cursor: pointer;
     }
     .tabs button.active {
-      background-color: var(--card-bg);
-      font-weight: bold;
-      color: var(--link-color);
+      background: var(--card); font-weight: bold; color: var(--accent);
     }
     .option-box {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      margin: 0.5rem 0;
-      cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem; border: 1px solid var(--border); border-radius: 8px;
+      cursor: pointer; margin: 0.5rem 0;
     }
-    .option-box:hover {
-      background-color: #1f2937;
-    }
+    .option-box:hover { background: #1f2937; }
     .btn {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      background-color: var(--btn-bg);
-      border: none;
-      border-radius: 8px;
-      color: white;
-      font-size: 1rem;
-      width: 100%;
-      cursor: pointer;
+      margin-top: 1rem; padding: 0.75rem; background: var(--btn);
+      color: white; border: none; width: 100%; border-radius: 8px; font-size: 1rem; cursor: pointer;
     }
-    .btn:hover {
-      background-color: var(--btn-hover);
-    }
+    .btn:hover { background: var(--btn-hover); }
   </style>
 </head>
 <body>
   <div class="top-nav">
     <button class="menu-icon" onclick="toggleSidebar()">☰</button>
     <div class="top-right">
-      <span class="toggle-mode" onclick="toggleMode()">🌓</span>
-      <div class="profile" onclick="toggleProfileMenu()" id="profileInitials">AC</div>
+      <span onclick="toggleMode()">🌓</span>
+      <div class="profile" onclick="toggleProfileMenu()" id="profileInitials">--</div>
     </div>
     <div class="profile-menu" id="profileMenu">
-      <p id="userName">User Name</p>
-      <small id="userEmail">user@email.com</small>
+      <p id="userName">Loading...</p>
+      <small id="userEmail"></small>
       <button onclick="location.href='profile_page.html'">👤 View Profile</button>
       <button onclick="location.href='funds_page.html'">➕ Add Funds</button>
       <button onclick="location.href='funds_page.html'">➖ Withdraw Funds</button>
@@ -180,113 +89,107 @@
   </div>
 
   <div class="sidebar" id="sidebar">
-    <h2>StockOrient</h2>
+    <h2>TradeOrbit</h2>
     <a href="home_page.html">🏠 Home</a>
     <a href="dashboard_page.html">📊 Dashboard</a>
     <a href="trade_page.html">🔁 Trade</a>
-    <a href="marketoverview_page.html">📈 Market Overview</a>
-    <a href="indianmarket_page.html">🇮🇳 Indian Market</a>
-    <a href="forexcrypto_page.html">🔗 Forex & Crypto</a>
-    <a href="economiccalendar_page.html">📅 Economic Calendar</a>
+    <a href="marketoverview_page.html">📈 Overview</a>
     <a href="myaccount_page.html">👤 My Account</a>
     <a href="funds_page.html">🏛️ Funds</a>
-    <h4>Information</h4>
-    <a href="margintrading_page.html">📈 Margin Trading</a>
     <a href="aboutus_page.html">ℹ️ About Us</a>
-    <a href="contactus_page.html">✉️ Contact Us</a>
+    <a href="contactus_page.html">✉️ Contact</a>
   </div>
 
-  <div class="container" id="appContent">
-    <!-- Content loaded via JS -->
+  <div class="container" id="mainContent">
+    <div class="card"><p>Loading...</p></div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
   <script>
     const client = new Appwrite.Client()
-      .setEndpoint("https://cloud.appwrite.io/v1")
-      .setProject("685cb0a90017cc71f99e");
+      .setEndpoint('https://cloud.appwrite.io/v1')
+      .setProject('685cb0a90017cc71f99e');
 
     const account = new Appwrite.Account(client);
-    const databases = new Appwrite.Databases(client);
-
-    const DB_ID = "685d0c85000aa071581a";
-    const BAL_COLLECTION = "685e3dde000ecd0c99bc";
-    const TRANS_COLLECTION = "685e3e53003af900cfce";
-
-    let currentUserId = "";
+    const db = new Appwrite.Databases(client);
+    const DB_ID = '685d0c85000aa071581a';
+    const BAL_ID = '685e3dde000ecd0c99bc';
+    const TRANS_ID = '685e3e53003af900cfce';
 
     async function initPage() {
       try {
         const user = await account.get();
-        currentUserId = user.$id;
+        const userId = user.$id;
         document.getElementById("userName").innerText = user.name;
         document.getElementById("userEmail").innerText = user.email;
-        document.getElementById("profileInitials").innerText = user.name.slice(0, 2).toUpperCase();
+        document.getElementById("profileInitials").innerText = user.name.slice(0,2).toUpperCase();
 
-        const balanceData = await databases.listDocuments(DB_ID, BAL_COLLECTION, [
-          Appwrite.Query.equal("userId", currentUserId)
-        ]);
-        const balance = balanceData.documents[0]?.balance || 0;
+        const balRes = await db.listDocuments(DB_ID, BAL_ID, [Appwrite.Query.equal("userId", userId)]);
+        const balance = balRes.documents.length > 0 ? parseFloat(balRes.documents[0].balance) : 0;
 
-        const transData = await databases.listDocuments(DB_ID, TRANS_COLLECTION, [
-          Appwrite.Query.equal("userId", currentUserId)
-        ]);
+        const txRes = await db.listDocuments(DB_ID, TRANS_ID, [Appwrite.Query.equal("userId", userId)]);
+        const history = txRes.documents.length > 0
+          ? txRes.documents.map(t => `<li>${t.type}: ₹${t.amount} - ${t.status}</li>`).join("")
+          : `<p>No deposit or withdrawal transactions yet.</p>`;
 
-        const history = transData.documents.map(doc => `<li>${doc.type}: ₹${doc.amount} - ${doc.status}</li>`).join('') || '<p>No transactions yet. Your fund movements will appear here.</p>';
-
-        const appHTML = `
-        <div class="card">
-          <h2>Manage Funds</h2>
-          <p><strong>Available Balance</strong><br><span style="font-size: 1.5rem; color: #60a5fa;">₹${balance.toFixed(2)}</span></p>
-          <p style="font-size: 0.9rem; color: #9ca3af;">Maximize your trading power with up to 5x leverage on your capital deposits.</p>
-        </div>
-        <div class="tabs">
-          <button class="active">Add Funds</button>
-          <button onclick="location.href='withdraw_page.html'">Withdraw</button>
-        </div>
-        <div class="card">
-          <h3>Add Funds</h3>
-          <div class="option-box" onclick="location.href='alchemy_page.html'"><span>💳 UPI</span><span>›</span></div>
-          <div class="option-box" onclick="location.href='wallet_page.html'"><span>🏦 Net Banking (NEFT/RTGS/IMPS)</span><span>›</span></div>
-          <p style="color: #9ca3af;">After initiating a transfer, click Confirm Deposit.</p>
-          <button class="btn" onclick="location.href='deposit_page.html'">Confirm Deposit</button>
-        </div>
-        <div class="card">
-          <h3>🔄 Transaction History</h3>
-          <ul style="padding-left: 1.2rem;">${history}</ul>
-          <button class="btn">⬇️ Download Full History</button>
-        </div>`;
-
-        document.getElementById("appContent").innerHTML = appHTML;
-
+        document.getElementById("mainContent").innerHTML = `
+          <div class="card">
+            <h2>Manage Funds</h2>
+            <p><strong>Available Balance</strong><br><span style="font-size: 1.5rem; color: var(--accent);">₹${balance.toFixed(2)}</span></p>
+            <p style="color:#9ca3af;">Maximize your trading power with up to 5x leverage.</p>
+          </div>
+          <div class="tabs">
+            <button class="active">➕ Add Funds</button>
+            <button onclick="location.href='withdraw_page.html'">➖ Withdraw</button>
+          </div>
+          <div class="card">
+            <h3>Add Funds</h3>
+            <div class="option-box" onclick="location.href='alchemy_page.html'">💳 Deposit using Alchemy <span>›</span></div>
+            <div class="option-box" onclick="location.href='wallet_page.html'">👛 Wallet Transfer <span>›</span></div>
+            <p style="color:#9ca3af;">After depositing, click below:</p>
+            <button class="btn" onclick="location.href='deposit_page.html'">Confirm Deposit</button>
+          </div>
+          <div class="card">
+            <h3>🔄 Transaction History</h3>
+            <ul style="padding-left: 1.2rem;">${history}</ul>
+            <button class="btn">⬇️ Download Full History</button>
+          </div>`;
       } catch (err) {
-        console.error("Error loading user data:", err);
+        console.error("Appwrite error:", err);
+        document.getElementById("mainContent").innerHTML = "<div class='card'><p>Error loading data. Please login again.</p></div>";
       }
     }
 
     function toggleSidebar() {
       document.getElementById("sidebar").classList.toggle("show");
     }
+
     function toggleProfileMenu() {
       document.getElementById("profileMenu").classList.toggle("show");
     }
+
     function toggleMode() {
-      const currentTheme = document.body.getAttribute('data-theme');
-      if (currentTheme === 'light') {
-        document.body.removeAttribute('data-theme');
-        localStorage.removeItem('theme');
+      const isLight = document.body.getAttribute("data-theme") === "light";
+      if (isLight) {
+        document.body.removeAttribute("data-theme");
+        localStorage.removeItem("theme");
       } else {
-        document.body.setAttribute('data-theme', 'light');
-        localStorage.setItem('theme', 'light');
+        document.body.setAttribute("data-theme", "light");
+        localStorage.setItem("theme", "light");
       }
     }
 
-    window.onload = function () {
-      if (localStorage.getItem('theme') === 'light') {
-        document.body.setAttribute('data-theme', 'light');
+    function logoutUser() {
+      account.deleteSession("current").then(() => {
+        window.location.href = "login_page.html";
+      });
+    }
+
+    window.onload = () => {
+      if (localStorage.getItem("theme") === "light") {
+        document.body.setAttribute("data-theme", "light");
       }
       initPage();
-    }
+    };
   </script>
 </body>
 </html>
