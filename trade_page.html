@@ -711,7 +711,7 @@
     const account = new Appwrite.Account(client);
     const databases = new Appwrite.Databases(client);
     const databaseID = '6677f53003af900cfce';
-    const collectionID = '6677f56f002d2946c764';
+    const collectionID = '685d0ca4003e789c372d';
 
     /*
       =======================================================
@@ -906,7 +906,8 @@
         document.getElementById("profileName").textContent = user.name;
         document.getElementById("profileEmail").textContent = user.email;
       } catch (err) {
-        alert("Not logged in. Redirecting to login page.");
+        console.error("Appwrite session fetch failed:", err); // Log the detailed error
+        alert("Session expired or not logged in. Redirecting to login page. Check console for details.");
         location.href = "login_page.html";
       }
     };
