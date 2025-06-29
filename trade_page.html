@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trade Page - StockOrient</title>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+  <script src="https://s3.tradingview.com/tv.js"></script>
+  <style>
+    :root {
+      --bg: #0f111d;
+      --card: #161925;
+      --text: white;
+      --accent: #3b82f6;
+      --border: rgba(255, 255, 255, 0.05);
+    }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+    }
+    .top-bar {
+      background: var(--card);
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      background-color: var(--card);
+      border-bottom: 1px solid var(--border);
+    }
+    .tabs button {
+      flex: 1;
+      padding: 1rem;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .tabs button.active {
+      background-color: var(--bg);
+      font-weight: bold;
+      color: var(--accent);
+    }
+    .section {
+      display: none;
+      padding: 1rem;
+    }
+    .section.active {
+      display: block;
+    }
+    .card {
+      background-color: var(--card);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .btn {
+      background-color: var(--accent);
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    input, select {
+      width: 100%;
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background-color: var(--bg);
+      color: white;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <h2>Trade</h2>
+    <button class="btn" onclick="location.href='funds_page.html'">💰 Funds</button>
+  </div>
+
+  <div class="tabs">
+    <button onclick="showTab('watchlist')" class="active">📋 Watchlist</button>
+    <button onclick="showTab('trade')">💹 Trade</button>
+    <button onclick="showTab('positions')">📊 Positions</button>
+    <button onclick="showTab('orders')">📁 Order Book</button>
+  </div>
+
+  <div class="section active" id="watchlist">
+    <div class="card">
+      <h3>Your Watchlist</h3>
+      <ul id="watchlistItems"></ul>
+    </div>
+  </div>
+
+  <div class="section" id="trade">
+    <div class="card">
+      <h3>Chart</h3>
+      <div id="tvChart" style="height:400px;"></div>
+    </div>
+    <div class="card">
+      <h3>Place Order</h3>
+      <select id="symbol">
+        <option value="BTCUSDT">BTC/USDT</option>
+        <option value="ETHUSDT">ETH/USDT</option>
+        <option value="NSE:NIFTY">NIFTY</option>
+      </select>
+      <input type="number" id="qty" placeholder="Quantity" />
+      <input type="number" id="price" placeholder="Price (USDT/INR)" />
+      <button class="btn" onclick="placeOrder('Buy')">Buy</button>
+      <button class="btn" onclick="placeOrder('Sell')" style="margin-left: 1rem; background-color:#ef4444;">Sell</button>
+      <p id="tradeStatus" style="margin-top:1rem;"></p>
+    </div>
+  </div>
+
+  <div class="section" id="positions">
+    <div class="card">
+      <h3>Open Positions</h3>
+      <table id="positionsTable">
+        <thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section" id="orders">
+    <div class="card">
+      <h3>Order History</h3>
+      <table id="ordersTable">
+        <thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const client = new Appwrite.Client()
+      .setEndpoint("https://nyc.cloud.appwrite.io/v1")
+      .setProject("685cb0a90017cc71f99e");
+
+    const account = new Appwrite.Account(client);
+    const databases = new Appwrite.Databases(client);
+    const databaseId = "685d0c85000aa071581a";
+    const collectionId = "6860d811003d902d5118"; // Replace this
+
+    let currentUser = null;
+
+    async function init() {
+      try {
+        currentUser = await account.get();
+        fetchOrders();
+        fetchPositions();
+        populateWatchlist();
+      } catch (err) {
+        console.error(err);
+        alert("Login required");
+        location.href = 'login_page.html';
+      }
+    }
+
+    async function placeOrder(side) {
+      const symbol = document.getElementById('symbol').value;
+      const qty = parseFloat(document.getElementById('qty').value);
+      const price = parseFloat(document.getElementById('price').value);
+      const statusText = document.getElementById('tradeStatus');
+      if (!qty || !price) return statusText.textContent = "Enter quantity and price.";
+
+      try {
+        await databases.createDocument(databaseId, collectionId, Appwrite.ID.unique(), {
+          userId: currentUser.$id,
+          symbol, qty, price, side,
+          status: "Open",
+          timestamp: new Date().toISOString()
+        });
+        statusText.textContent = `Order placed: ${side} ${qty} ${symbol} @${price}`;
+        fetchOrders(); fetchPositions();
+      } catch (err) {
+        console.error(err);
+        statusText.textContent = "Failed to place order.";
+      }
+    }
+
+    async function fetchOrders() {
+      const res = await databases.listDocuments(databaseId, collectionId, [
+        Appwrite.Query.equal("userId", currentUser.$id)
+      ]);
+      const tbody = document.querySelector('#ordersTable tbody');
+      tbody.innerHTML = res.documents.map(doc => `
+        <tr><td>${doc.symbol}</td><td>${doc.side}</td><td>${doc.qty}</td><td>${doc.price}</td><td>${doc.status}</td></tr>
+      `).join('');
+    }
+
+    async function fetchPositions() {
+      const res = await databases.listDocuments(databaseId, collectionId, [
+        Appwrite.Query.equal("userId", currentUser.$id),
+        Appwrite.Query.equal("status", "Open")
+      ]);
+      const tbody = document.querySelector('#positionsTable tbody');
+      tbody.innerHTML = res.documents.map(doc => `
+        <tr><td>${doc.symbol}</td><td>${doc.side}</td><td>${doc.qty}</td><td>${doc.price}</td></tr>
+      `).join('');
+    }
+
+    function populateWatchlist() {
+      const symbols = ["BTC/USDT", "ETH/USDT", "NIFTY", "GOLD", "BANKNIFTY"];
+      const ul = document.getElementById("watchlistItems");
+      ul.innerHTML = symbols.map(s => `<li>${s}</li>`).join("");
+    }
+
+    new TradingView.widget({
+      container_id: "tvChart",
+      autosize: true,
+      symbol: "BINANCE:BTCUSDT",
+      interval: "D",
+      timezone: "Etc/UTC",
+      theme: "dark",
+      style: "1",
+      locale: "en",
+      toolbar_bg: "#161925",
+      enable_publishing: false,
+      allow_symbol_change: true,
+      hide_legend: false
+    });
+
+    function showTab(id) {
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>
