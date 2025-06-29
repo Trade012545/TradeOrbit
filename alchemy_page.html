@@ -178,7 +178,8 @@
         document.getElementById("successModal").style.display = "flex";
       } catch (error) {
         console.error(error);
-        statusMsg.textContent = "Failed to submit deposit. Please try again.";
+        statusMsg.textContent = `Error: ${error.message || "Unknown error occurred"}`;
+
       }
     }
   </script>
