@@ -140,8 +140,8 @@
     const storage = new Appwrite.Storage(client);
 
     const databaseId = "685d0c85000aa071581a";
-    const collectionId = "685e3e53003af900cfce"; // Transaction collection
-    const bucketId = "685dee56002dac3412a7"; // Replace with your actual bucket ID
+    const collectionId = "685e3e53003af900cfce";
+    const bucketId = "685dee56002dac3412a7";
 
     function copyAddress() {
       const address = document.getElementById("walletAddress").innerText;
@@ -164,8 +164,9 @@
 
       try {
         const user = await account.get();
-
         const uploaded = await storage.createFile(bucketId, Appwrite.ID.unique(), file);
+
+        const timestamp = new Date().toISOString();
 
         await databases.createDocument(databaseId, collectionId, Appwrite.ID.unique(), {
           userId: user.$id,
@@ -173,13 +174,13 @@
           amount: parseFloat(amount),
           status: "Pending for Approval",
           screenshot: uploaded.$id,
+          timestamp: timestamp
         });
 
         document.getElementById("successModal").style.display = "flex";
       } catch (error) {
         console.error(error);
         statusMsg.textContent = `Error: ${error.message || "Unknown error occurred"}`;
-
       }
     }
   </script>
