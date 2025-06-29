@@ -1,100 +1,915 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trade Page</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class'
-    };
-  </script>
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-  <script src="https://s3.tradingview.com/tv.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trade - StockOrient</title>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+  <style>
+    /*
+      =======================================================
+      *
+      * Shared Styles from Existing Files
+      *
+      =======================================================
+    */
+    :root {
+      --bg-color: #0f111d;
+      --text-color: white;
+      --card-bg: #161925;
+      --border-color: rgba(255, 255, 255, 0.05);
+      --link-color: #60a5fa;
+      --btn-bg: #3b82f6;
+      --btn-hover: #2563eb;
+      --input-bg: #1f2937;
+      --input-border: rgba(255, 255, 255, 0.1);
+      --success-color: #10b981;
+      --red-color: #ef4444;
+      --yellow-color: #fbbf24;
+      --green-color: #34d399;
+      --grey-text: #9ca3af;
+      --light-blue: #60a5fa;
+    }
+
+    [data-theme="light"] {
+      --bg-color: white;
+      --text-color: #111827;
+      --card-bg: #f3f4f6;
+      --border-color: #e5e7eb;
+      --link-color: #2563eb;
+      --btn-bg: #3b82f6;
+      --btn-hover: #2563eb;
+      --input-bg: #e5e7eb;
+      --input-border: #9ca3af;
+      --success-color: #10b981;
+      --red-color: #dc2626;
+      --yellow-color: #f59e0b;
+      --green-color: #10b981;
+      --grey-text: #6b7280;
+      --light-blue: #2563eb;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+      overflow-x: hidden;
+    }
+    
+    a {
+      text-decoration: none;
+      color: var(--link-color);
+    }
+    
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+    
+    /*
+      =======================================================
+      *
+      * Sidebar & Profile Menu Styles
+      *
+      =======================================================
+    */
+    .sidebar {
+      position: fixed;
+      left: -250px;
+      top: 0;
+      width: 250px;
+      height: 100%;
+      background-color: var(--card-bg);
+      transition: left 0.3s;
+      padding-top: 60px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+      z-index: 100;
+      overflow-y: auto;
+    }
+    
+    .sidebar.show {
+      left: 0;
+    }
+    
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .sidebar li {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .sidebar li a {
+      display: flex;
+      align-items: center;
+      color: var(--text-color);
+      gap: 1rem;
+    }
+    
+    .sidebar li a:hover {
+      background-color: var(--input-bg);
+    }
+    
+    .sidebar li:last-child {
+      border-bottom: none;
+    }
+    
+    .profile-menu {
+      position: fixed;
+      top: 70px;
+      right: 1rem;
+      width: 200px;
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      display: none;
+      flex-direction: column;
+      padding: 1rem;
+      z-index: 100;
+      border: 1px solid var(--border-color);
+    }
+    
+    .profile-menu.show {
+      display: flex;
+    }
+    
+    .profile-info {
+      text-align: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .profile-initials-placeholder {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: var(--btn-bg);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 0.5rem;
+      font-weight: bold;
+    }
+    
+    .profile-menu button {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 6px;
+      border: none;
+      background-color: var(--red-color);
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal-content {
+      background-color: var(--card-bg);
+      margin: auto;
+      padding: 20px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+    
+    .close-btn {
+      color: var(--text-color);
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    /*
+      =======================================================
+      *
+      * Trade Page Specific Styles
+      *
+      =======================================================
+    */
+    .main-content {
+      flex: 1;
+      padding: 1rem;
+      transition: margin-left 0.3s;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+    
+    .header .menu-icon-placeholder {
+      width: 24px;
+      height: 24px;
+      background-color: var(--yellow-color);
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 5px;
+      font-size: 10px;
+    }
+
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .quick-trade-btn {
+      background-color: var(--btn-bg);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.9rem;
+      border: none;
+    }
+    
+    .header-tabs {
+        display: flex;
+        gap: 0.5rem;
+        background-color: var(--input-bg);
+        border-radius: 8px;
+        padding: 0.25rem;
+    }
+
+    .tab-item {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.3s;
+    }
+
+    .tab-item.active {
+        background-color: var(--btn-bg);
+        color: white;
+    }
+
+    .theme-toggle-placeholder, .profile-icon-placeholder {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      background-color: var(--red-color);
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 10px;
+    }
+    
+    .profile-icon-placeholder {
+        background-color: var(--link-color);
+    }
+    
+    .content-section {
+        display: none;
+    }
+
+    .content-section.active {
+        display: block;
+    }
+
+    .trade-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        padding: 1rem;
+    }
+    
+    .tradingview-chart-container {
+        width: 100%;
+        height: 500px;
+        background-color: #000;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .trade-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+
+    .buy-btn, .sell-btn {
+        flex: 1;
+        padding: 1rem;
+        font-size: 1.2rem;
+        font-weight: bold;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .buy-btn {
+        background-color: var(--green-color);
+        color: white;
+    }
+
+    .sell-btn {
+        background-color: var(--red-color);
+        color: white;
+    }
+    
+    /* Watchlist and Positions common styles */
+    .table-container {
+        width: 100%;
+        overflow-x: auto;
+    }
+
+    .table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table th, .table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .table th {
+        color: var(--grey-text);
+        font-weight: normal;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+
+    .table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .gain {
+        color: var(--green-color);
+    }
+    
+    .loss {
+        color: var(--red-color);
+    }
+
+    /* Order/Quick Page Modal Styles */
+    .order-form-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .order-toggle {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .order-toggle button {
+        flex: 1;
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: 2px solid var(--border-color);
+        background-color: transparent;
+        color: var(--text-color);
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s, border-color 0.3s;
+    }
+    
+    .order-toggle button.active.buy {
+        background-color: var(--green-color);
+        border-color: var(--green-color);
+    }
+    
+    .order-toggle button.active.sell {
+        background-color: var(--red-color);
+        border-color: var(--red-color);
+    }
+    
+    .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .input-group label {
+        font-size: 0.9rem;
+        color: var(--grey-text);
+    }
+    
+    .input-group input, .input-group select {
+        padding: 0.75rem;
+        border-radius: 8px;
+        border: 1px solid var(--input-border);
+        background-color: var(--input-bg);
+        color: var(--text-color);
+        font-size: 1rem;
+        outline: none;
+    }
+
+    .order-submit-btn {
+        width: 100%;
+        padding: 1rem;
+        margin-top: 1.5rem;
+        border-radius: 8px;
+        border: none;
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: white;
+        background-color: var(--green-color); /* Default to Buy */
+        cursor: pointer;
+    }
+    
+    .modal-symbol-selector {
+      margin-bottom: 1rem;
+    }
+    
+    /* Placeholders */
+    .tradingview-card-placeholder {
+      height: 150px;
+      border: 1px dashed var(--border-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-style: italic;
+      color: var(--grey-text);
+      border-radius: 8px;
+    }
+
+    @media (max-width: 768px) {
+        .header {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 1rem;
+        }
+        .header-right {
+            justify-content: space-between;
+        }
+        .header-tabs {
+            justify-content: center;
+            width: 100%;
+        }
+        .trade-content {
+            padding: 0.5rem;
+        }
+        .tradingview-chart-container {
+            height: 400px;
+        }
+    }
+  </style>
 </head>
-<body class="bg-gray-900 text-white">
-  <div id="app" class="grid grid-cols-4 grid-rows-1 min-h-screen gap-2 p-4">
-    <!-- TradingView Chart -->
-    <div class="col-span-3 bg-gray-800 rounded-2xl shadow p-2">
-      <div id="tv_chart_container" class="h-[500px] w-full"></div>
+<body>
+
+  <aside id="sidebar" class="sidebar">
+    <div style="padding: 1rem; display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--border-color);">
+      <div style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--link-color); display: flex; justify-content: center; align-items: center; color: white; font-weight: bold;">LOGO</div>
+      <h3 style="margin: 0;">TradeOrbit</h3>
     </div>
+    <ul>
+      <li><a href="main_page.html">Dashboard</a></li>
+      <li><a href="#" class="active">Trade</a></li>
+      <li><a href="funds_page.html">Funds</a></li>
+      <li><a href="news_page.html">News</a></li>
+      <li><a href="about_page.html">About</a></li>
+      <li><a href="contact_page.html">Contact</a></li>
+    </ul>
+  </aside>
 
-    <!-- Buy/Sell & Order Book -->
-    <div class="col-span-1 flex flex-col gap-4">
-      <!-- Buy/Sell Form -->
-      <div class="bg-gray-800 p-4 rounded-2xl shadow">
-        <h2 class="text-xl font-bold mb-2">Place Order</h2>
-        <form id="orderForm" class="space-y-2">
-          <input type="number" id="price" placeholder="Price" class="w-full p-2 rounded bg-gray-700 text-white" required />
-          <input type="number" id="quantity" placeholder="Quantity" class="w-full p-2 rounded bg-gray-700 text-white" required />
-          <div class="flex justify-between gap-2">
-            <button type="button" onclick="placeOrder('buy')" class="w-1/2 bg-green-600 hover:bg-green-700 p-2 rounded text-white font-semibold">Buy</button>
-            <button type="button" onclick="placeOrder('sell')" class="w-1/2 bg-red-600 hover:bg-red-700 p-2 rounded text-white font-semibold">Sell</button>
-          </div>
-        </form>
+  <div class="container">
+    <main class="main-content">
+      <header class="header">
+        <div class="header-left" style="display: flex; align-items: center; gap: 1rem;">
+            <div class="menu-icon-placeholder" onclick="toggleSidebar()">MENU</div>
+            <button class="quick-trade-btn" onclick="showQuickTradeModal()">Quick Trade</button>
+        </div>
+        <div class="header-tabs">
+            <div id="tradeTab" class="tab-item active" onclick="showTab('trade')">Trade</div>
+            <div id="watchlistTab" class="tab-item" onclick="showTab('watchlist')">Watchlist</div>
+            <div id="positionsTab" class="tab-item" onclick="showTab('positions')">Positions</div>
+        </div>
+        <div class="header-right">
+          <div class="theme-toggle-placeholder" onclick="toggleMode()">THEME</div>
+          <div class="profile-icon-placeholder" onclick="toggleProfileMenu()">PROFILE</div>
+        </div>
+      </header>
+
+      <div id="profileMenu" class="profile-menu">
+        <div class="profile-info">
+          <div id="profileInitials" class="profile-initials-placeholder">NA</div>
+          <p id="profileName" style="margin: 0.5rem 0 0.2rem; font-weight: bold;"></p>
+          <small id="profileEmail" style="color: var(--grey-text);"></small>
+        </div>
+        <button onclick="logoutUser()">Logout</button>
       </div>
-
-      <!-- Order Book -->
-      <div class="bg-gray-800 p-4 rounded-2xl shadow flex-1 overflow-y-auto">
-        <h2 class="text-xl font-bold mb-2">Order Book</h2>
-        <div id="orderBook" class="text-sm space-y-1">
-          <!-- Orders will be listed here -->
+      
+      <div id="tradeSection" class="content-section active">
+        <div class="trade-content">
+          <div class="tradingview-chart-container">
+            <div class="tradingview-widget-container" style="height:100%;width:100%">
+              <div id="tradingview_widget" class="tradingview-widget-container__widget" style="height:calc(100% - 32px);width:100%"></div>
+              <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>
+              {
+                "autosize": true,
+                "symbol": "NASDAQ:AAPL",
+                "interval": "D",
+                "timezone": "exchange",
+                "theme": "dark",
+                "style": "1",
+                "locale": "en",
+                "allow_symbol_change": true,
+                "calendar": false,
+                "support_host": "https://www.tradingview.com",
+                "toolbar_bg": "var(--card-bg)",
+                "container_id": "tradingview_widget"
+              }
+              </script>
+            </div>
+            </div>
+          <div class="trade-buttons">
+            <button class="buy-btn" onclick="showOrderModal('buy')">BUY</button>
+            <button class="sell-btn" onclick="showOrderModal('sell')">SELL</button>
+          </div>
         </div>
       </div>
+
+      <div id="watchlistSection" class="content-section">
+          <div class="tradingview-widget-container" style="height: 100%; width: 100%;">
+            <div class="tradingview-widget-container__widget" style="height:100%;width:100%;"></div>
+            <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+            {
+              "colorTheme": "dark",
+              "dateRange": "12m",
+              "showChart": true,
+              "locale": "en",
+              "width": "100%",
+              "height": "600",
+              "largeChartUrl": "",
+              "is><span class="blue-text">Track all markets on TradingView</span></a></div>
+            </div>
+            </script>
+          </div>
+      </div>
+
+      <div id="positionsSection" class="content-section">
+          <div class="card" style="padding: 1.5rem;">
+            <h3 style="margin-top: 0;">Open Positions</h3>
+            <div class="table-container">
+              <table class="table">
+                  <thead>
+                      <tr>
+                          <th>Symbol</th>
+                          <th>Quantity</th>
+                          <th>Buy Price</th>
+                          <th>Current Price</th>
+                          <th>P&L</th>
+                          <th>Action</th>
+                      </tr>
+                  </thead>
+                  <tbody id="positionsTableBody">
+                      <tr>
+                          <td>AAPL</td>
+                          <td>10</td>
+                          <td>$150.00</td>
+                          <td>$155.20</td>
+                          <td class="gain">+$52.00</td>
+                          <td><button class="sell-btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Close</button></td>
+                      </tr>
+                      <tr>
+                          <td>GOOGL</td>
+                          <td>5</td>
+                          <td>$120.50</td>
+                          <td>$118.00</td>
+                          <td class="loss">-$12.50</td>
+                          <td><button class="buy-btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Close</button></td>
+                      </tr>
+                      <tr>
+                          <td>TSLA</td>
+                          <td>2</td>
+                          <td>$700.00</td>
+                          <td>$702.50</td>
+                          <td class="gain">+$5.00</td>
+                          <td><button class="sell-btn" style="padding: 0.5rem 1rem; font-size: 0.9rem;">Close</button></td>
+                      </tr>
+                  </tbody>
+              </table>
+            </div>
+          </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="orderModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('orderModal')">&times;</span>
+        <h2 style="text-align: center;">Place Order</h2>
+        <div class="order-form-container">
+            <div class="order-toggle">
+                <button id="buyToggle" onclick="toggleOrderType('buy')">BUY</button>
+                <button id="sellToggle" onclick="toggleOrderType('sell')">SELL</button>
+            </div>
+            <div class="input-group">
+                <label for="orderSymbol">Symbol</label>
+                <input type="text" id="orderSymbol" value="AAPL" disabled>
+            </div>
+            <div class="input-group">
+                <label for="orderPrice">Price (USD)</label>
+                <input type="number" id="orderPrice" placeholder="Market Price" disabled>
+            </div>
+            <div class="input-group">
+                <label for="orderQuantity">Quantity</label>
+                <input type="number" id="orderQuantity" placeholder="Enter quantity" required>
+            </div>
+            <div class="input-group">
+                <label for="orderType">Order Type</label>
+                <select id="orderType">
+                  <option value="market">Market</option>
+                  <option value="limit">Limit</option>
+                </select>
+            </div>
+            <button id="orderSubmitBtn" class="order-submit-btn">PLACE BUY ORDER</button>
+        </div>
     </div>
   </div>
 
+  <div id="quickTradeModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal('quickTradeModal')">&times;</span>
+        <h2 style="text-align: center;">Quick Trade</h2>
+        <div class="order-form-container">
+            <div class="order-toggle">
+                <button id="quickBuyToggle" onclick="toggleQuickOrderType('buy')">BUY</button>
+                <button id="quickSellToggle" onclick="toggleQuickOrderType('sell')">SELL</button>
+            </div>
+            <div class="input-group modal-symbol-selector">
+                <label for="quickOrderSymbol">Symbol</label>
+                <input type="text" id="quickOrderSymbol" placeholder="Enter symbol (e.g., AAPL)" required>
+            </div>
+            <div class="input-group">
+                <label for="quickOrderPrice">Price (USD)</label>
+                <input type="number" id="quickOrderPrice" placeholder="Market Price" disabled>
+            </div>
+            <div class="input-group">
+                <label for="quickOrderQuantity">Quantity</label>
+                <input type="number" id="quickOrderQuantity" placeholder="Enter quantity" required>
+            </div>
+            <div class="input-group">
+                <label for="quickOrderType">Order Type</label>
+                <select id="quickOrderType">
+                  <option value="market">Market</option>
+                  <option value="limit">Limit</option>
+                </select>
+            </div>
+            <button id="quickOrderSubmitBtn" class="order-submit-btn">PLACE BUY ORDER</button>
+        </div>
+    </div>
+  </div>
+
+
   <script>
-    // Initialize TradingView Widget
-    new TradingView.widget({
-      container_id: "tv_chart_container",
-      autosize: true,
-      symbol: "BINANCE:BTCUSDT",
-      interval: "15",
-      timezone: "Etc/UTC",
-      theme: "dark",
-      style: "1",
-      locale: "en",
-      toolbar_bg: "#1f2937",
-      enable_publishing: false,
-      hide_top_toolbar: false,
-      withdateranges: true,
-      hide_side_toolbar: false,
-      allow_symbol_change: true,
-      details: true,
-      studies: [
-        "MACD@tv-basicstudies"
-      ]
-    });
+    /*
+      =======================================================
+      *
+      * Appwrite Integration
+      *
+      =======================================================
+    */
+    const client = new Appwrite.Client()
+        .setEndpoint('https://cloud.appwrite.io/v1')
+        .setProject('6677f5253003af900cfce');
 
-    const orderBook = document.getElementById("orderBook");
+    const account = new Appwrite.Account(client);
+    const databases = new Appwrite.Databases(client);
+    const databaseID = '6677f53003af900cfce';
+    const collectionID = '6677f56f002d2946c764';
 
-    function placeOrder(type) {
-      const price = parseFloat(document.getElementById("price").value);
-      const quantity = parseFloat(document.getElementById("quantity").value);
-
-      if (!price || !quantity) {
-        alert("Please enter both price and quantity.");
-        return;
-      }
-
-      const order = {
-        type,
-        price,
-        quantity,
-        timestamp: new Date().toLocaleTimeString()
-      };
-
-      // Normally you'd push to Appwrite here. For now, add to DOM.
-      const orderItem = document.createElement("div");
-      orderItem.className = `flex justify-between ${type === 'buy' ? 'text-green-400' : 'text-red-400'}`;
-      orderItem.textContent = `${type.toUpperCase()} @ $${order.price} x ${order.quantity} (${order.timestamp})`;
-      orderBook.prepend(orderItem);
-
-      // Reset form
-      document.getElementById("orderForm").reset();
+    /*
+      =======================================================
+      *
+      * Shared JS Functions from main_page.html
+      *
+      =======================================================
+    */
+    function toggleSidebar() {
+      document.getElementById("sidebar").classList.toggle("show");
     }
+
+    function toggleProfileMenu() {
+      document.getElementById("profileMenu").classList.toggle("show");
+    }
+
+    function toggleMode() {
+      const currentTheme = document.body.getAttribute('data-theme');
+      if (currentTheme === 'light') {
+        document.body.removeAttribute('data-theme');
+        localStorage.removeItem('theme');
+      } else {
+        document.body.setAttribute('data-theme', 'light');
+        localStorage.setItem('theme', 'light');
+      }
+      // Re-load TradingView widget to apply new theme
+      loadTradingViewWidget();
+    }
+    
+    function logoutUser() {
+        account.deleteSession("current").then(() => {
+            location.href = "login_page.html";
+        }).catch(err => {
+            console.error(err);
+            alert("Logout failed. Please try again.");
+        });
+    }
+
+    /*
+      =======================================================
+      *
+      * SPA & Modal Functions
+      *
+      =======================================================
+    */
+    let currentOrderType = 'buy'; // Default order type
+    
+    function showTab(tabId) {
+        // Hide all content sections
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        
+        // Show the selected content section
+        document.getElementById(tabId + 'Section').classList.add('active');
+        
+        // Add active class to the selected tab
+        document.getElementById(tabId + 'Tab').classList.add('active');
+        
+        // Update TradingView chart symbol if we are on the trade page
+        if (tabId === 'trade') {
+            loadTradingViewWidget();
+        }
+    }
+    
+    function showOrderModal(type, symbol = 'AAPL') {
+        const modal = document.getElementById('orderModal');
+        modal.style.display = 'flex';
+        toggleOrderType(type);
+        document.getElementById('orderSymbol').value = symbol;
+    }
+    
+    function toggleOrderType(type) {
+        currentOrderType = type;
+        const buyBtn = document.getElementById('buyToggle');
+        const sellBtn = document.getElementById('sellToggle');
+        const submitBtn = document.getElementById('orderSubmitBtn');
+        
+        if (type === 'buy') {
+            buyBtn.classList.add('active', 'buy');
+            sellBtn.classList.remove('active', 'sell');
+            submitBtn.style.backgroundColor = 'var(--green-color)';
+            submitBtn.innerText = 'PLACE BUY ORDER';
+        } else {
+            sellBtn.classList.add('active', 'sell');
+            buyBtn.classList.remove('active', 'buy');
+            submitBtn.style.backgroundColor = 'var(--red-color)';
+            submitBtn.innerText = 'PLACE SELL ORDER';
+        }
+    }
+    
+    function showQuickTradeModal() {
+        const modal = document.getElementById('quickTradeModal');
+        modal.style.display = 'flex';
+        // Reset to buy and update button text
+        toggleQuickOrderType('buy');
+    }
+    
+    function toggleQuickOrderType(type) {
+        const buyBtn = document.getElementById('quickBuyToggle');
+        const sellBtn = document.getElementById('quickSellToggle');
+        const submitBtn = document.getElementById('quickOrderSubmitBtn');
+        
+        if (type === 'buy') {
+            buyBtn.classList.add('active', 'buy');
+            sellBtn.classList.remove('active', 'sell');
+            submitBtn.style.backgroundColor = 'var(--green-color)';
+            submitBtn.innerText = 'PLACE BUY ORDER';
+        } else {
+            sellBtn.classList.add('active', 'sell');
+            buyBtn.classList.remove('active', 'buy');
+            submitBtn.style.backgroundColor = 'var(--red-color)';
+            submitBtn.innerText = 'PLACE SELL ORDER';
+        }
+    }
+    
+    function closeModal(modalId) {
+      document.getElementById(modalId).style.display = 'none';
+    }
+
+    // Close modals on outside click
+    window.onclick = function(e) {
+      const modals = ["orderModal", "quickTradeModal"];
+      modals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (e.target === modal) modal.style.display = "none";
+      });
+    }
+
+    /*
+      =======================================================
+      *
+      * TradingView Widget Loading
+      *
+      =======================================================
+    */
+    function loadTradingViewWidget() {
+      // This function re-initializes the TradingView widget to apply theme changes
+      const container = document.getElementById('tradingview_widget');
+      if (container) {
+        container.innerHTML = ''; // Clear existing widget
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+        script.async = true;
+        
+        const currentTheme = document.body.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        
+        script.innerHTML = `
+          {
+            "autosize": true,
+            "symbol": "NASDAQ:AAPL",
+            "interval": "D",
+            "timezone": "exchange",
+            "theme": "${currentTheme}",
+            "style": "1",
+            "locale": "en",
+            "allow_symbol_change": true,
+            "calendar": false,
+            "support_host": "https://www.tradingview.com",
+            "toolbar_bg": "var(--card-bg)"
+          }
+        `;
+        container.appendChild(script);
+      }
+    }
+
+
+    /*
+      =======================================================
+      *
+      * Initial Page Load & Appwrite Data Fetch
+      *
+      =======================================================
+    */
+    window.onload = async function () {
+      // Set theme from local storage
+      if (localStorage.getItem('theme') === 'light') {
+        document.body.setAttribute('data-theme', 'light');
+      }
+      
+      // Fetch user data from Appwrite
+      try {
+        const user = await account.get();
+        const initials = user.name.split(" ").map(n => n[0]).join("").toUpperCase();
+        document.getElementById("profileInitials").textContent = initials;
+        document.getElementById("profileName").textContent = user.name;
+        document.getElementById("profileEmail").textContent = user.email;
+      } catch (err) {
+        alert("Not logged in. Redirecting to login page.");
+        location.href = "login_page.html";
+      }
+    };
   </script>
 </body>
 </html>
