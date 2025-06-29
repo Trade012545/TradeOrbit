@@ -64,6 +64,31 @@
       font-size: 0.9rem;
       color: #9ca3af;
     }
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 9999;
+    }
+    .modal-content {
+      background-color: #1f2937;
+      padding: 2rem;
+      border-radius: 12px;
+      text-align: center;
+    }
+    .modal-content button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      background-color: #3b82f6;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -96,6 +121,13 @@
 
     <button class="btn" onclick="submitDeposit()">Confirm Deposit</button>
     <p class="note" id="statusMsg"></p>
+  </div>
+
+  <div class="modal" id="successModal">
+    <div class="modal-content">
+      <p>Deposit request submitted successfully.</p>
+      <button onclick="location.href='trade_page.html'">Proceed to Trade</button>
+    </div>
   </div>
 
   <script>
@@ -133,10 +165,7 @@
       try {
         const user = await account.get();
 
-        const uploaded = await storage.createFile(bucketId, Appwrite.ID.unique(), file, [
-          Appwrite.Permission.read(Appwrite.Role.user(user.$id)),
-          Appwrite.Permission.write(Appwrite.Role.user(user.$id))
-        ]);
+        const uploaded = await storage.createFile(bucketId, Appwrite.ID.unique(), file);
 
         await databases.createDocument(databaseId, collectionId, Appwrite.ID.unique(), {
           userId: user.$id,
@@ -146,10 +175,7 @@
           screenshot: uploaded.$id,
         });
 
-        statusMsg.textContent = "Deposit request submitted successfully.";
-        document.getElementById("amount").value = "";
-        document.getElementById("screenshot").value = "";
-
+        document.getElementById("successModal").style.display = "flex";
       } catch (error) {
         console.error(error);
         statusMsg.textContent = "Failed to submit deposit. Please try again.";
