@@ -164,16 +164,15 @@
 
       try {
         const user = await account.get();
-        const uploaded = await storage.createFile(bucketId, Appwrite.ID.unique(), file);
+        await storage.createFile(bucketId, Appwrite.ID.unique(), file);
 
         const timestamp = new Date().toISOString();
 
         await databases.createDocument(databaseId, collectionId, Appwrite.ID.unique(), {
           userId: user.$id,
           type: "Deposit",
-          amount: parseFloat(amount),
+          amount: parseInt(amount),
           status: "Pending for Approval",
-          screenshot: uploaded.$id,
           timestamp: timestamp
         });
 
