@@ -4,7 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Trade - StockOrient</title>
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1">
+    
+  </script>
   <style>
     /*
       =======================================================
@@ -490,6 +492,127 @@
   </style>
 </head>
 <body>
+  <!-- DEMO-USD Simulation Canvas Placeholder -->
+<canvas id="demoChartCanvas" style="width:100%; height:500px;"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+<script>
+const client = new Appwrite.Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setProject('685cb0a90017cc71f99e');
+
+const account = new Appwrite.Account(client);
+const databases = new Appwrite.Databases(client);
+const databaseID = '685d0c85000aa071581a';
+const collectionID = '685d0ca4003e789c372d';
+
+// DEMO Simulation Data
+const demoData = [...Array(3600).keys()].map(i => {
+  const base = 100 + Math.sin(i / 180 * Math.PI) * 5 + (Math.random() - 0.5);
+  return parseFloat(base.toFixed(2));
+});
+
+let currentTick = 0;
+let demoInterval = null;
+let demoChartCtx = null;
+let demoPositions = [];
+let activeSymbol = 'NASDAQ:AAPL';
+
+const canvas = document.getElementById('demoChartCanvas');
+
+function loadTradingViewWidget(symbol = 'NASDAQ:AAPL') {
+  activeSymbol = symbol;
+  if (symbol === 'DEMO-USD') {
+    renderDemoChart();
+    return;
+  } else {
+    stopDemoChart();
+  }
+}
+
+function renderDemoChart() {
+  stopDemoChart();
+  const ctx = canvas.getContext('2d');
+  demoChartCtx = ctx;
+
+  function drawChart() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const w = canvas.width;
+    const h = canvas.height;
+    const slice = demoData.slice(Math.max(0, currentTick - 100), currentTick);
+    const max = Math.max(...slice);
+    const min = Math.min(...slice);
+
+    ctx.strokeStyle = '#60a5fa';
+    ctx.beginPath();
+    slice.forEach((p, i) => {
+      const x = (i / slice.length) * w;
+      const y = h - ((p - min) / (max - min)) * h;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+  }
+
+  demoInterval = setInterval(() => {
+    if (currentTick >= demoData.length) return;
+    currentTick++;
+    drawChart();
+    updateDemoPL();
+  }, 1000);
+
+  drawChart();
+}
+
+function stopDemoChart() {
+  clearInterval(demoInterval);
+  demoInterval = null;
+  currentTick = 0;
+}
+
+async function saveDemoTrade(type, quantity, price) {
+  const user = await account.get();
+  const data = {
+    userId: user.$id,
+    symbol: 'DEMO-USD',
+    type,
+    quantity: parseFloat(quantity),
+    price,
+    timestamp: Date.now()
+  };
+  await databases.createDocument(databaseID, collectionID, 'unique()', data);
+  loadDemoPositions();
+}
+
+async function loadDemoPositions() {
+  const user = await account.get();
+  const res = await databases.listDocuments(databaseID, collectionID, [
+    Appwrite.Query.equal('userId', user.$id),
+    Appwrite.Query.equal('symbol', 'DEMO-USD')
+  ]);
+  demoPositions = res.documents;
+  console.log('Positions:', demoPositions);
+}
+
+function updateDemoPL() {
+  const price = demoData[currentTick];
+  demoPositions.forEach((pos, idx) => {
+    const pl = (pos.type === 'buy' ? 1 : -1) * (price - pos.price) * pos.quantity;
+    console.log(`Position ${idx} P&L: $${pl.toFixed(2)}`);
+  });
+}
+
+window.onload = async () => {
+  try {
+    const user = await account.get();
+    console.log("Logged in as", user.email);
+    loadDemoPositions();
+    loadTradingViewWidget('DEMO-USD'); // default to demo
+  } catch (err) {
+    alert("Session expired or not logged in.");
+  }
+};
+</script>
 
   <aside id="sidebar" class="sidebar">
     <div style="padding: 1rem; display: flex; align-items: center; gap: 1rem; border-bottom: 1px solid var(--border-color);">
