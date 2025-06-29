@@ -1,252 +1,100 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trade Page - StockOrient</title>
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+  <title>Trade Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    };
+  </script>
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
   <script src="https://s3.tradingview.com/tv.js"></script>
-  <style>
-    :root {
-      --bg: #0f111d;
-      --card: #161925;
-      --text: white;
-      --accent: #3b82f6;
-      --border: rgba(255, 255, 255, 0.05);
-    }
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background-color: var(--bg);
-      color: var(--text);
-    }
-    .top-bar {
-      background: var(--card);
-      padding: 1rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-    }
-    .tabs {
-      display: flex;
-      justify-content: space-around;
-      background-color: var(--card);
-      border-bottom: 1px solid var(--border);
-    }
-    .tabs button {
-      flex: 1;
-      padding: 1rem;
-      background: none;
-      border: none;
-      color: var(--text);
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    .tabs button.active {
-      background-color: var(--bg);
-      font-weight: bold;
-      color: var(--accent);
-    }
-    .section {
-      display: none;
-      padding: 1rem;
-    }
-    .section.active {
-      display: block;
-    }
-    .card {
-      background-color: var(--card);
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-    .btn {
-      background-color: var(--accent);
-      color: white;
-      padding: 0.5rem 1rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    input, select {
-      width: 100%;
-      margin: 0.5rem 0;
-      padding: 0.5rem;
-      border-radius: 4px;
-      border: 1px solid var(--border);
-      background-color: var(--bg);
-      color: white;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 0.5rem;
-      border-bottom: 1px solid var(--border);
-      text-align: left;
-    }
-  </style>
 </head>
-<body>
-  <div class="top-bar">
-    <h2>Trade</h2>
-    <button class="btn" onclick="location.href='funds_page.html'">💰 Funds</button>
-  </div>
-
-  <div class="tabs">
-    <button onclick="showTab('watchlist')" class="active">📋 Watchlist</button>
-    <button onclick="showTab('trade')">💹 Trade</button>
-    <button onclick="showTab('positions')">📊 Positions</button>
-    <button onclick="showTab('orders')">📁 Order Book</button>
-  </div>
-
-  <div class="section active" id="watchlist">
-    <div class="card">
-      <h3>Your Watchlist</h3>
-      <ul id="watchlistItems"></ul>
+<body class="bg-gray-900 text-white">
+  <div id="app" class="grid grid-cols-4 grid-rows-1 min-h-screen gap-2 p-4">
+    <!-- TradingView Chart -->
+    <div class="col-span-3 bg-gray-800 rounded-2xl shadow p-2">
+      <div id="tv_chart_container" class="h-[500px] w-full"></div>
     </div>
-  </div>
 
-  <div class="section" id="trade">
-    <div class="card">
-      <h3>Chart</h3>
-      <div id="tvChart" style="height:400px;"></div>
-    </div>
-    <div class="card">
-      <h3>Place Order</h3>
-      <select id="symbol">
-        <option value="BTCUSDT">BTC/USDT</option>
-        <option value="ETHUSDT">ETH/USDT</option>
-        <option value="NSE:NIFTY">NIFTY</option>
-      </select>
-      <input type="number" id="qty" placeholder="Quantity" />
-      <input type="number" id="price" placeholder="Price (USDT/INR)" />
-      <button class="btn" onclick="placeOrder('Buy')">Buy</button>
-      <button class="btn" onclick="placeOrder('Sell')" style="margin-left: 1rem; background-color:#ef4444;">Sell</button>
-      <p id="tradeStatus" style="margin-top:1rem;"></p>
-    </div>
-  </div>
+    <!-- Buy/Sell & Order Book -->
+    <div class="col-span-1 flex flex-col gap-4">
+      <!-- Buy/Sell Form -->
+      <div class="bg-gray-800 p-4 rounded-2xl shadow">
+        <h2 class="text-xl font-bold mb-2">Place Order</h2>
+        <form id="orderForm" class="space-y-2">
+          <input type="number" id="price" placeholder="Price" class="w-full p-2 rounded bg-gray-700 text-white" required />
+          <input type="number" id="quantity" placeholder="Quantity" class="w-full p-2 rounded bg-gray-700 text-white" required />
+          <div class="flex justify-between gap-2">
+            <button type="button" onclick="placeOrder('buy')" class="w-1/2 bg-green-600 hover:bg-green-700 p-2 rounded text-white font-semibold">Buy</button>
+            <button type="button" onclick="placeOrder('sell')" class="w-1/2 bg-red-600 hover:bg-red-700 p-2 rounded text-white font-semibold">Sell</button>
+          </div>
+        </form>
+      </div>
 
-  <div class="section" id="positions">
-    <div class="card">
-      <h3>Open Positions</h3>
-      <table id="positionsTable">
-        <thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  <div class="section" id="orders">
-    <div class="card">
-      <h3>Order History</h3>
-      <table id="ordersTable">
-        <thead><tr><th>Symbol</th><th>Side</th><th>Qty</th><th>Price</th><th>Status</th></tr></thead>
-        <tbody></tbody>
-      </table>
+      <!-- Order Book -->
+      <div class="bg-gray-800 p-4 rounded-2xl shadow flex-1 overflow-y-auto">
+        <h2 class="text-xl font-bold mb-2">Order Book</h2>
+        <div id="orderBook" class="text-sm space-y-1">
+          <!-- Orders will be listed here -->
+        </div>
+      </div>
     </div>
   </div>
 
   <script>
-    const client = new Appwrite.Client()
-      .setEndpoint("https://nyc.cloud.appwrite.io/v1")
-      .setProject("685cb0a90017cc71f99e");
-
-    const account = new Appwrite.Account(client);
-    const databases = new Appwrite.Databases(client);
-    const databaseId = "685d0c85000aa071581a";
-    const collectionId = "6860d811003d902d5118"; // Replace this
-
-    let currentUser = null;
-
-    async function init() {
-      try {
-        currentUser = await account.get();
-        fetchOrders();
-        fetchPositions();
-        populateWatchlist();
-      } catch (err) {
-        console.error(err);
-        alert("Login required");
-        location.href = 'login_page.html';
-      }
-    }
-
-    async function placeOrder(side) {
-      const symbol = document.getElementById('symbol').value;
-      const qty = parseFloat(document.getElementById('qty').value);
-      const price = parseFloat(document.getElementById('price').value);
-      const statusText = document.getElementById('tradeStatus');
-      if (!qty || !price) return statusText.textContent = "Enter quantity and price.";
-
-      try {
-        await databases.createDocument(databaseId, collectionId, Appwrite.ID.unique(), {
-          userId: currentUser.$id,
-          symbol, qty, price, side,
-          status: "Open",
-          timestamp: new Date().toISOString()
-        });
-        statusText.textContent = `Order placed: ${side} ${qty} ${symbol} @${price}`;
-        fetchOrders(); fetchPositions();
-      } catch (err) {
-        console.error(err);
-        statusText.textContent = "Failed to place order.";
-      }
-    }
-
-    async function fetchOrders() {
-      const res = await databases.listDocuments(databaseId, collectionId, [
-        Appwrite.Query.equal("userId", currentUser.$id)
-      ]);
-      const tbody = document.querySelector('#ordersTable tbody');
-      tbody.innerHTML = res.documents.map(doc => `
-        <tr><td>${doc.symbol}</td><td>${doc.side}</td><td>${doc.qty}</td><td>${doc.price}</td><td>${doc.status}</td></tr>
-      `).join('');
-    }
-
-    async function fetchPositions() {
-      const res = await databases.listDocuments(databaseId, collectionId, [
-        Appwrite.Query.equal("userId", currentUser.$id),
-        Appwrite.Query.equal("status", "Open")
-      ]);
-      const tbody = document.querySelector('#positionsTable tbody');
-      tbody.innerHTML = res.documents.map(doc => `
-        <tr><td>${doc.symbol}</td><td>${doc.side}</td><td>${doc.qty}</td><td>${doc.price}</td></tr>
-      `).join('');
-    }
-
-    function populateWatchlist() {
-      const symbols = ["BTC/USDT", "ETH/USDT", "NIFTY", "GOLD", "BANKNIFTY"];
-      const ul = document.getElementById("watchlistItems");
-      ul.innerHTML = symbols.map(s => `<li>${s}</li>`).join("");
-    }
-
+    // Initialize TradingView Widget
     new TradingView.widget({
-      container_id: "tvChart",
+      container_id: "tv_chart_container",
       autosize: true,
       symbol: "BINANCE:BTCUSDT",
-      interval: "D",
+      interval: "15",
       timezone: "Etc/UTC",
       theme: "dark",
       style: "1",
       locale: "en",
-      toolbar_bg: "#161925",
+      toolbar_bg: "#1f2937",
       enable_publishing: false,
+      hide_top_toolbar: false,
+      withdateranges: true,
+      hide_side_toolbar: false,
       allow_symbol_change: true,
-      hide_legend: false
+      details: true,
+      studies: [
+        "MACD@tv-basicstudies"
+      ]
     });
 
-    function showTab(id) {
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      event.target.classList.add('active');
-    }
+    const orderBook = document.getElementById("orderBook");
 
-    window.onload = init;
+    function placeOrder(type) {
+      const price = parseFloat(document.getElementById("price").value);
+      const quantity = parseFloat(document.getElementById("quantity").value);
+
+      if (!price || !quantity) {
+        alert("Please enter both price and quantity.");
+        return;
+      }
+
+      const order = {
+        type,
+        price,
+        quantity,
+        timestamp: new Date().toLocaleTimeString()
+      };
+
+      // Normally you'd push to Appwrite here. For now, add to DOM.
+      const orderItem = document.createElement("div");
+      orderItem.className = `flex justify-between ${type === 'buy' ? 'text-green-400' : 'text-red-400'}`;
+      orderItem.textContent = `${type.toUpperCase()} @ $${order.price} x ${order.quantity} (${order.timestamp})`;
+      orderBook.prepend(orderItem);
+
+      // Reset form
+      document.getElementById("orderForm").reset();
+    }
   </script>
 </body>
 </html>
